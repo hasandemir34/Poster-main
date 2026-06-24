@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Framely Admin</title>
+  <link rel="stylesheet" href="css/admin.css?v=3">
+</head>
+<body>
+
+<!-- ── LOGIN SCREEN ─────────────────────────────────────────── -->
+<div id="loginScreen" style="display:none">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-mark">🖼️</div>
+      <span class="login-logo-text">Frame<span>ly</span></span>
+      <span class="login-badge">ADMIN</span>
+    </div>
+    <div class="login-title">Yönetici Girişi</div>
+    <div class="login-sub">Admin hesabınızla giriş yapın.</div>
+
+    <form id="loginForm">
+      <div class="login-field">
+        <label>E-posta</label>
+        <input id="loginEmail" type="email" placeholder="admin@framely.com" required autocomplete="email">
+      </div>
+      <div class="login-field">
+        <label>Şifre</label>
+        <input id="loginPass" type="password" placeholder="••••••••" required autocomplete="current-password">
+      </div>
+      <div id="loginError" class="login-error"></div>
+      <button type="submit" class="btn-login">Giriş Yap</button>
+    </form>
+
+    <div style="margin-top:16px;padding:12px;background:#f5f5f7;border-radius:8px;font-size:12px;color:#6E6E73;text-align:center">
+      Varsayılan: <strong>admin@framely.com</strong> / <strong>Admin123</strong>
+    </div>
+  </div>
+</div>
+
+<!-- ── ADMIN APP ─────────────────────────────────────────────── -->
+<div id="adminApp">
+
+  <!-- Sidebar -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-logo-mark">🖼️</div>
+      <span class="sidebar-logo-text">Frame<span>ly</span></span>
+      <span class="sidebar-badge">ADMIN</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Genel</div>
+      <button class="nav-item" data-tab="dashboard">
+        <span class="nav-icon">📊</span> Dashboard
+      </button>
+
+      <div class="nav-section-label">Yönetim</div>
+      <button class="nav-item" data-tab="orders">
+        <span class="nav-icon">📦</span> Siparişler
+        <span class="nav-badge" id="orderNavBadge" style="display:none">0</span>
+      </button>
+      <button class="nav-item" data-tab="products">
+        <span class="nav-icon">🖼️</span> Ürünler
+      </button>
+      <button class="nav-item" data-tab="users">
+        <span class="nav-icon">👥</span> Kullanıcılar
+      </button>
+
+      <div class="nav-section-label">Sistem</div>
+      <button class="nav-item" data-tab="settings">
+        <span class="nav-icon">⚙️</span> Ayarlar
+      </button>
+    </nav>
+  </aside>
+
+  <!-- Top Header -->
+  <header class="admin-header">
+    <span id="headerTitle" class="header-title">Dashboard</span>
+    <span id="headerEmail" class="header-user"></span>
+    <button id="btnSignout" class="btn-signout">Çıkış Yap</button>
+  </header>
+
+  <!-- Content -->
+  <main class="admin-content">
+
+    <!-- DASHBOARD ──────────────────────────────────────────── -->
+    <div id="pane-dashboard" class="content-pane">
+      <div class="pane-header">
+        <div>
+          <div class="pane-title">Dashboard</div>
+          <div class="pane-sub">Genel bakış ve özet istatistikler</div>
+        </div>
+        <a href="/" target="_blank" class="btn btn-ghost">🔗 Siteyi Görüntüle</a>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon red">📦</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-orders">0</div>
+            <div class="stat-label">Toplam Sipariş</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">💰</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-revenue">0 ₺</div>
+            <div class="stat-label">Toplam Ciro</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon blue">👥</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-users">0</div>
+            <div class="stat-label">Kayıtlı Kullanıcı</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon purple">🖼️</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-products">0</div>
+            <div class="stat-label">Aktif Ürün</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pending alert -->
+      <div id="pendingAlert" style="background:var(--yellow-bg);border:1px solid #ffe0a0;border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:10px;font-size:13px">
+        <span style="font-size:20px">⏳</span>
+        <div><strong><span id="stat-pending">0</span> sipariş</strong> hazırlanmayı bekliyor.</div>
+        <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="switchTab('orders');document.getElementById('orderFilter').value='Hazırlanıyor';orderFilter='Hazırlanıyor';renderOrders()">Görüntüle →</button>
+      </div>
+
+      <!-- Recent orders -->
+      <div class="table-card">
+        <div class="table-header">
+          <div class="table-title">Son Siparişler</div>
+          <button class="btn btn-ghost btn-sm" onclick="switchTab('orders')">Tümünü Gör →</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Sipariş No</th>
+              <th>Müşteri</th>
+              <th>Ürün</th>
+              <th>Tutar</th>
+              <th>Durum</th>
+            </tr>
+          </thead>
+          <tbody id="recentOrdersBody">
+            <tr><td colspan="5"><div class="empty-state"><div class="empty-icon">📦</div><div class="empty-title">Henüz sipariş yok</div></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ORDERS ─────────────────────────────────────────────── -->
+    <div id="pane-orders" class="content-pane">
+      <div class="pane-header">
+        <div>
+          <div class="pane-title">Siparişler</div>
+          <div class="pane-sub">Tüm müşteri siparişleri ve durumları</div>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-header">
+          <div class="table-title">Sipariş Listesi</div>
+          <div class="table-tools">
+            <input id="orderSearch" class="search-input" type="text" placeholder="Ara...">
+            <select id="orderFilter" class="filter-select">
+              <option value="all">Tüm Durumlar</option>
+              <option value="Hazırlanıyor">Hazırlanıyor</option>
+              <option value="Baskıda">Baskıda</option>
+              <option value="Kargoda">Kargoda</option>
+              <option value="Teslim Edildi">Teslim Edildi</option>
+              <option value="İptal">İptal</option>
+            </select>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Sipariş No</th>
+              <th>Müşteri</th>
+              <th>Ürün</th>
+              <th>Tutar</th>
+              <th>Durum</th>
+              <th>Tarih</th>
+              <th>İşlemler</th>
+            </tr>
+          </thead>
+          <tbody id="ordersBody">
+            <tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📦</div><div class="empty-title">Sipariş bulunamadı</div></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PRODUCTS ───────────────────────────────────────────── -->
+    <div id="pane-products" class="content-pane">
+      <div class="pane-header">
+        <div>
+          <div class="pane-title">Ürünler</div>
+          <div class="pane-sub" id="productCount">0 ürün</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <input id="productSearch" class="search-input" type="text" placeholder="Ürün ara...">
+          <button id="btnNewProduct" class="btn btn-primary">+ Yeni Ürün</button>
+        </div>
+      </div>
+
+      <div id="productsGrid" class="products-grid"></div>
+    </div>
+
+    <!-- USERS ──────────────────────────────────────────────── -->
+    <div id="pane-users" class="content-pane">
+      <div class="pane-header">
+        <div>
+          <div class="pane-title">Kullanıcılar</div>
+          <div class="pane-sub">Kayıtlı müşteriler</div>
+        </div>
+        <input id="userSearch" class="search-input" type="text" placeholder="İsim veya e-posta ara...">
+      </div>
+
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>Kullanıcı</th>
+              <th>E-posta</th>
+              <th>Siparişler</th>
+              <th>Toplam Harcama</th>
+              <th>Kayıt Tarihi</th>
+            </tr>
+          </thead>
+          <tbody id="usersBody">
+            <tr><td colspan="5"><div class="empty-state"><div class="empty-icon">👤</div><div class="empty-title">Kullanıcı bulunamadı</div></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SETTINGS ───────────────────────────────────────────── -->
+    <div id="pane-settings" class="content-pane">
+      <div class="pane-header">
+        <div>
+          <div class="pane-title">Ayarlar</div>
+          <div class="pane-sub">Admin hesap bilgileri</div>
+        </div>
+      </div>
+
+      <div style="max-width:480px">
+        <div class="table-card" style="padding:24px">
+          <div class="table-title" style="margin-bottom:20px">Admin Hesap Bilgileri</div>
+          <form id="settingsForm">
+            <div class="form-group">
+              <label>Admin E-postası</label>
+              <input id="settingEmail" class="form-input" type="email" required>
+            </div>
+            <div class="form-group">
+              <label>Yeni Şifre <span style="font-weight:400;text-transform:none">(boş bırakırsanız değişmez)</span></label>
+              <input id="settingPass" class="form-input" type="password" placeholder="••••••••" minlength="6" autocomplete="new-password">
+            </div>
+            <div class="form-group">
+              <label>Şifre Tekrar</label>
+              <input id="settingPassConfirm" class="form-input" type="password" placeholder="••••••••" autocomplete="new-password">
+            </div>
+            <button type="submit" class="btn btn-primary">Kaydet</button>
+          </form>
+        </div>
+
+        <div class="table-card" style="padding:24px;margin-top:16px">
+          <div class="table-title" style="margin-bottom:8px">Veri Yönetimi</div>
+          <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px">LocalStorage'daki verileri sıfırlama işlemleri.</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <button class="btn btn-danger" onclick="if(confirm('Tüm siparişler silinecek!')){localStorage.removeItem('framely:orders');showToast('Siparişler temizlendi')}">🗑️ Tüm Siparişleri Sil</button>
+            <button class="btn btn-danger" onclick="if(confirm('Ürünler varsayılana sıfırlanacak!')){localStorage.removeItem('framely:products');renderProducts();showToast('Ürünler varsayılana sıfırlandı')}">↺ Ürünleri Varsayılana Sıfırla</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ── ORDER DETAIL MODAL ────────────────────────────────────── -->
+<div id="orderDetailModal" class="modal-overlay">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-header">
+      <div class="modal-title">Sipariş Detayı</div>
+      <button class="modal-close" onclick="closeModal('orderDetailModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-family:monospace;font-size:13px;color:var(--text-muted);margin-bottom:16px" id="orderDetailId"></div>
+
+      <div class="order-detail-grid">
+        <div class="detail-block">
+          <div class="detail-label">Müşteri</div>
+          <div class="detail-value" id="orderDetailName"></div>
+          <div class="detail-sub" id="orderDetailEmail"></div>
+        </div>
+        <div class="detail-block">
+          <div class="detail-label">Sipariş Tarihi</div>
+          <div class="detail-value" id="orderDetailDate"></div>
+        </div>
+        <div class="detail-block">
+          <div class="detail-label">Ürün</div>
+          <div class="detail-value" id="orderDetailPreset"></div>
+          <div class="detail-sub" id="orderDetailDesc"></div>
+        </div>
+        <div class="detail-block">
+          <div class="detail-label">Ödeme</div>
+          <div class="detail-value" id="orderDetailTotal"></div>
+          <div class="detail-sub">Kart: <span id="orderDetailCard"></span></div>
+        </div>
+        <div class="detail-block full">
+          <div class="detail-label">Teslimat Adresi</div>
+          <div class="detail-value" id="orderDetailAddress"></div>
+        </div>
+      </div>
+
+      <div style="background:var(--bg);border-radius:10px;padding:16px">
+        <div class="detail-label" style="margin-bottom:10px">Sipariş Durumu</div>
+        <div class="status-select-group">
+          <label>Durum:</label>
+          <select id="orderDetailStatus" class="filter-select" style="flex:1">
+            <option value="Hazırlanıyor">⏳ Hazırlanıyor</option>
+            <option value="Baskıda">🖨️ Baskıda</option>
+            <option value="Kargoda">🚚 Kargoda</option>
+            <option value="Teslim Edildi">✅ Teslim Edildi</option>
+            <option value="İptal">❌ İptal</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('orderDetailModal')">İptal</button>
+      <button id="btnSaveOrderStatus" class="btn btn-primary">Durumu Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── PRODUCT MODAL ─────────────────────────────────────────── -->
+<div id="productModal" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div id="productModalTitle" class="modal-title">Yeni Ürün Ekle</div>
+      <button class="modal-close" onclick="closeModal('productModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <form id="productForm" onsubmit="return false">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Ürün Adı *</label>
+            <input id="pName" class="form-input" type="text" placeholder="Klasik 50" required>
+          </div>
+          <div class="form-group">
+            <label>İkon / Emoji</label>
+            <input id="pIcon" class="form-input" type="text" placeholder="🖼️">
+            <div class="form-hint">Tek emoji veya kısa metin (örn: A3)</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Açıklama *</label>
+          <input id="pDesc" class="form-input" type="text" placeholder="30x45 cm Poster" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Fiyat (TL) *</label>
+            <input id="pPrice" class="form-input" type="number" min="1" placeholder="179" required>
+          </div>
+          <div class="form-group">
+            <label>Yönelim</label>
+            <select id="pOrient" class="form-select">
+              <option value="portrait">Dikey (Portrait)</option>
+              <option value="landscape">Yatay (Landscape)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="background:var(--bg);border-radius:8px;padding:16px;margin-bottom:16px">
+          <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:12px">Grid Yapısı</div>
+          <div class="form-row">
+            <div class="form-group" style="margin-bottom:0">
+              <label>Sütun Sayısı *</label>
+              <input id="pCols" class="form-input" type="number" min="1" max="20" placeholder="5" required>
+              <div class="form-hint">Yatay hücre sayısı</div>
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label>Satır Sayısı *</label>
+              <input id="pRows" class="form-input" type="number" min="1" max="20" placeholder="10" required>
+              <div class="form-hint">Dikey hücre sayısı</div>
+            </div>
+          </div>
+          <div style="margin-top:12px;font-size:12px;color:var(--text-muted)">
+            → <strong id="cellCountPreview">0</strong> fotoğraf kapasitesi
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Hücre Boşluğu (px)</label>
+            <input id="pGap" class="form-input" type="number" min="0" max="20" placeholder="4">
+          </div>
+          <div class="form-group">
+            <label>Kenarlık (px)</label>
+            <input id="pPad" class="form-input" type="number" min="0" max="40" placeholder="12">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Durum</label>
+          <select id="pActive" class="form-select">
+            <option value="true">Aktif (Sitede görünür)</option>
+            <option value="false">Pasif (Sitede gizli)</option>
+          </select>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('productModal')">İptal</button>
+      <button id="btnSaveProduct" class="btn btn-primary">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── TOAST ─────────────────────────────────────────────────── -->
+<div id="toast" class="toast">
+  <span class="toast-icon"></span>
+  <span class="toast-msg"></span>
+</div>
+
+<script src="js/admin.js"></script>
+<script>
+  // Live cell count preview in product modal
+  ['pCols','pRows'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => {
+      const c = parseInt(document.getElementById('pCols').value) || 0;
+      const r = parseInt(document.getElementById('pRows').value) || 0;
+      document.getElementById('cellCountPreview').textContent = c * r;
+    });
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Framely — Giriş / Kayıt</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/variables.css?v=5">
+<link rel="stylesheet" href="css/auth.css?v=5">
+</head>
+<body>
+
+<div class="auth-layout">
+
+  <div class="auth-brand">
+    <a href="index.html" class="logo">
+      <div class="logo-mark">🖼</div>
+      <span class="logo-text">Frame<span>ly</span></span>
+    </a>
+    <div class="auth-brand-visual">
+      <div class="brand-poster bp1">
+        <div class="brand-grid bg-5x10"></div>
+      </div>
+      <div class="brand-poster bp2">
+        <div class="brand-grid bg-6x6"></div>
+      </div>
+      <div class="brand-poster bp3">
+        <div class="brand-grid bg-7x7"></div>
+      </div>
+      <div class="brand-tagline">
+        <strong>Anılarınızı sanat eserine dönüştürün</strong>
+        <span>Posterinizi tasarlayın, kapınıza gelsin.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="auth-main">
+    <div class="auth-box">
+
+      <div class="auth-tabs" id="authTabs">
+        <button class="auth-tab active" data-tab="login">Giriş Yap</button>
+        <button class="auth-tab" data-tab="register">Kayıt Ol</button>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <form class="auth-form" id="loginForm" novalidate>
+        <h1 class="auth-title">Tekrar hoş geldiniz</h1>
+        <p class="auth-sub">Hesabınıza giriş yapın ve tasarımlarınıza devam edin.</p>
+
+        <div class="field-group">
+          <label class="field-label">E-posta</label>
+          <input class="field-input" type="email" id="loginEmail" placeholder="ornek@mail.com" required autocomplete="email">
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Şifre</label>
+          <input class="field-input" type="password" id="loginPassword" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+
+        <div class="auth-error" id="loginError"></div>
+
+        <button class="btn-auth" type="submit">Giriş Yap</button>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+          <p class="auth-switch" style="margin:0;">Hesabınız yok mu? <button type="button" class="auth-switch-btn" data-goto="register">Kayıt olun</button></p>
+          <button type="button" class="auth-switch-btn" id="forgotBtn">Şifremi unuttum</button>
+        </div>
+      </form>
+
+      <!-- FORGOT PASSWORD PANEL -->
+      <div class="verify-panel hidden" id="forgotPanel">
+        <div class="verify-panel-icon">🔑</div>
+        <h2 class="verify-panel-title">Şifre sıfırlama</h2>
+        <p class="verify-panel-desc">Kayıtlı e-posta adresinizi girin, şifre sıfırlama bağlantısı gönderelim.</p>
+
+        <form id="forgotForm" novalidate>
+          <div class="field-group" style="text-align:left;">
+            <label class="field-label">E-posta</label>
+            <input class="field-input" type="email" id="forgotEmail" placeholder="ornek@mail.com" required autocomplete="email">
+          </div>
+          <div class="auth-error" id="forgotError"></div>
+          <button class="btn-auth" type="submit" id="forgotSubmitBtn">Sıfırlama Bağlantısı Gönder</button>
+        </form>
+
+        <div class="verify-panel-success hidden" id="forgotSuccess">
+          ✅ Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.
+        </div>
+
+        <p class="auth-switch" style="margin-top:16px;">
+          <button type="button" class="auth-switch-btn" data-goto="login">← Giriş sayfasına dön</button>
+        </p>
+      </div>
+
+      <!-- REGISTER FORM -->
+      <form class="auth-form hidden" id="registerForm" novalidate>
+        <h1 class="auth-title">Hesap oluşturun</h1>
+        <p class="auth-sub">Ücretsiz kaydolun, posterlerinizi siparişe dönüştürün.</p>
+
+        <div class="field-group">
+          <label class="field-label">Ad Soyad</label>
+          <input class="field-input" type="text" id="regName" placeholder="Adınız Soyadınız" required>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">E-posta</label>
+          <input class="field-input" type="email" id="regEmail" placeholder="ornek@mail.com" required autocomplete="email">
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Şifre <span class="field-hint">En az 6 karakter</span></label>
+          <input class="field-input" type="password" id="regPassword" placeholder="••••••••" required minlength="6" autocomplete="new-password">
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Şifre Tekrar</label>
+          <input class="field-input" type="password" id="regPassword2" placeholder="••••••••" required autocomplete="new-password">
+        </div>
+
+        <div class="auth-error" id="registerError"></div>
+
+        <button class="btn-auth" type="submit" id="regSubmitBtn">Kayıt Ol</button>
+
+        <p class="auth-switch">Zaten hesabınız var mı? <button type="button" class="auth-switch-btn" data-goto="login">Giriş yapın</button></p>
+      </form>
+
+      <!-- CHECK EMAIL PANEL -->
+      <div class="verify-panel hidden" id="verifyPanel">
+        <div class="verify-panel-icon">📬</div>
+        <h2 class="verify-panel-title">E-postanızı kontrol edin</h2>
+        <p class="verify-panel-desc">
+          <strong id="verifyPanelEmail"></strong> adresine doğrulama bağlantısı gönderdik.
+          Bağlantıya tıklayarak kaydınızı tamamlayın.
+        </p>
+        <div class="verify-panel-note">
+          <span>📌</span>
+          <span>E-posta birkaç dakika içinde gelecektir. Gelen kutunuzda göremiyorsanız spam/junk klasörünü kontrol edin.</span>
+        </div>
+        <button class="btn-resend" id="resendBtn" type="button">Tekrar gönder</button>
+        <div class="auth-error" id="resendError"></div>
+        <div class="verify-panel-success hidden" id="resendSuccess">✅ Doğrulama e-postası tekrar gönderildi.</div>
+        <p class="auth-switch" style="margin-top:20px;">
+          <button type="button" class="auth-switch-btn" data-goto="login">← Giriş sayfasına dön</button>
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script type="module">
+import { login, registerPending, resendVerification, requestPasswordReset, isLoggedIn } from './js/auth.js?v=5';
+import { sendVerificationEmail, sendPasswordResetEmail, isEmailConfigured, isResetConfigured } from './js/email.js?v=5';
+
+if (isLoggedIn()) {
+  const redir = sessionStorage.getItem('framely:authRedirect') || 'index.html';
+  sessionStorage.removeItem('framely:authRedirect');
+  window.location.href = redir;
+}
+
+const tabs         = document.querySelectorAll('.auth-tab');
+const authTabs     = document.getElementById('authTabs');
+const loginForm    = document.getElementById('loginForm');
+const registerForm = document.getElementById('registerForm');
+const verifyPanel  = document.getElementById('verifyPanel');
+const forgotPanel  = document.getElementById('forgotPanel');
+
+let pendingEmail = '';
+
+const allPanels = [loginForm, registerForm, verifyPanel, forgotPanel];
+
+function hideAll() {
+  allPanels.forEach(p => p.classList.add('hidden'));
+}
+
+function switchTab(tab) {
+  authTabs.classList.remove('hidden');
+  hideAll();
+  tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  if (tab === 'login')    loginForm.classList.remove('hidden');
+  if (tab === 'register') registerForm.classList.remove('hidden');
+}
+
+function showVerifyPanel(email) {
+  pendingEmail = email;
+  authTabs.classList.add('hidden');
+  hideAll();
+  verifyPanel.classList.remove('hidden');
+  document.getElementById('verifyPanelEmail').textContent = email;
+  document.getElementById('resendError').textContent = '';
+  document.getElementById('resendSuccess').classList.add('hidden');
+}
+
+function showForgotPanel() {
+  authTabs.classList.add('hidden');
+  hideAll();
+  forgotPanel.classList.remove('hidden');
+  document.getElementById('forgotError').textContent = '';
+  document.getElementById('forgotSuccess').classList.add('hidden');
+  document.getElementById('forgotEmail').value = '';
+  document.getElementById('forgotForm').classList.remove('hidden');
+}
+
+tabs.forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
+document.querySelectorAll('.auth-switch-btn[data-goto]').forEach(btn => {
+  btn.addEventListener('click', () => switchTab(btn.dataset.goto));
+});
+
+document.getElementById('forgotBtn').addEventListener('click', showForgotPanel);
+
+loginForm.addEventListener('submit', e => {
+  e.preventDefault();
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPassword').value;
+  const err   = document.getElementById('loginError');
+  err.textContent = '';
+  const res = login(email, pass);
+  if (!res.ok) { err.textContent = res.error; return; }
+  const redir = sessionStorage.getItem('framely:authRedirect') || 'index.html';
+  sessionStorage.removeItem('framely:authRedirect');
+  window.location.href = redir;
+});
+
+registerForm.addEventListener('submit', async e => {
+  e.preventDefault();
+  const name  = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const pass  = document.getElementById('regPassword').value;
+  const pass2 = document.getElementById('regPassword2').value;
+  const err   = document.getElementById('registerError');
+  const btn   = document.getElementById('regSubmitBtn');
+  err.textContent = '';
+
+  if (!name)            { err.textContent = 'Ad Soyad zorunludur.'; return; }
+  if (pass.length < 6)  { err.textContent = 'Şifre en az 6 karakter olmalıdır.'; return; }
+  if (pass !== pass2)   { err.textContent = 'Şifreler eşleşmiyor.'; return; }
+
+  const res = registerPending(name, email, pass);
+  if (!res.ok) { err.textContent = res.error; return; }
+
+  btn.textContent = 'Gönderiliyor...';
+  btn.disabled = true;
+
+  if (isEmailConfigured()) {
+    try {
+      await sendVerificationEmail(name, email, res.token);
+    } catch (ex) {
+      console.error('EmailJS hata:', ex);
+      err.textContent = 'Doğrulama e-postası gönderilemedi. Lütfen tekrar deneyin.';
+      btn.textContent = 'Kayıt Ol';
+      btn.disabled = false;
+      return;
+    }
+  }
+
+  btn.textContent = 'Kayıt Ol';
+  btn.disabled = false;
+  showVerifyPanel(email);
+});
+
+document.getElementById('resendBtn').addEventListener('click', async () => {
+  const resendErr = document.getElementById('resendError');
+  const resendOk  = document.getElementById('resendSuccess');
+  const btn       = document.getElementById('resendBtn');
+  resendErr.textContent = '';
+  resendOk.classList.add('hidden');
+
+  const res = resendVerification(pendingEmail);
+  if (!res.ok) { resendErr.textContent = res.error; return; }
+
+  btn.textContent = 'Gönderiliyor...';
+  btn.disabled = true;
+
+  if (isEmailConfigured()) {
+    try {
+      await sendVerificationEmail(res.name, pendingEmail, res.token);
+    } catch (ex) {
+      resendErr.textContent = 'E-posta gönderilemedi. Lütfen tekrar deneyin.';
+      btn.textContent = 'Tekrar gönder';
+      btn.disabled = false;
+      return;
+    }
+  }
+
+  btn.textContent = 'Tekrar gönder';
+  btn.disabled = false;
+  resendOk.classList.remove('hidden');
+
+  let countdown = 60;
+  btn.disabled = true;
+  btn.textContent = `Tekrar gönder (${countdown}s)`;
+  const iv = setInterval(() => {
+    countdown--;
+    btn.textContent = `Tekrar gönder (${countdown}s)`;
+    if (countdown <= 0) { clearInterval(iv); btn.disabled = false; btn.textContent = 'Tekrar gönder'; }
+  }, 1000);
+});
+
+document.getElementById('forgotForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const email = document.getElementById('forgotEmail').value.trim();
+  const err   = document.getElementById('forgotError');
+  const ok    = document.getElementById('forgotSuccess');
+  const btn   = document.getElementById('forgotSubmitBtn');
+  const form  = document.getElementById('forgotForm');
+  err.textContent = '';
+  ok.classList.add('hidden');
+
+  const res = requestPasswordReset(email);
+  if (!res.ok) { err.textContent = res.error; return; }
+
+  btn.textContent = 'Gönderiliyor...';
+  btn.disabled = true;
+
+  if (isResetConfigured()) {
+    try {
+      await sendPasswordResetEmail(res.name, email, res.token);
+    } catch (ex) {
+      console.error('EmailJS reset hata:', ex);
+      err.textContent = 'E-posta gönderilemedi. Lütfen tekrar deneyin.';
+      btn.textContent = 'Sıfırlama Bağlantısı Gönder';
+      btn.disabled = false;
+      return;
+    }
+  }
+
+  btn.textContent = 'Sıfırlama Bağlantısı Gönder';
+  btn.disabled = false;
+  form.classList.add('hidden');
+  ok.classList.remove('hidden');
+});
+
+const urlTab = new URLSearchParams(window.location.search).get('tab');
+if (urlTab === 'register') switchTab('register');
+</script>
+</body>
+</html>

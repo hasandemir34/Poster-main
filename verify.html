@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Framely — E-posta Doğrulama</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/variables.css?v=5">
+<link rel="stylesheet" href="css/auth.css?v=5">
+</head>
+<body>
+
+<div class="auth-layout">
+
+  <div class="auth-brand">
+    <a href="index.html" class="logo">
+      <div class="logo-mark">🖼</div>
+      <span class="logo-text">Frame<span>ly</span></span>
+    </a>
+    <div class="auth-brand-visual">
+      <div class="brand-poster bp1"><div class="brand-grid bg-5x10"></div></div>
+      <div class="brand-poster bp2"><div class="brand-grid bg-6x6"></div></div>
+      <div class="brand-poster bp3"><div class="brand-grid bg-7x7"></div></div>
+      <div class="brand-tagline">
+        <strong>Anılarınızı sanat eserine dönüştürün</strong>
+        <span>Posterinizi tasarlayın, kapınıza gelsin.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="auth-main">
+    <div class="auth-box">
+
+      <div id="verifyLoading" class="verify-state">
+        <div class="verify-icon spin">⏳</div>
+        <h2 class="verify-title">Doğrulanıyor...</h2>
+        <p class="verify-desc">Hesabınız doğrulanıyor, lütfen bekleyin.</p>
+      </div>
+
+      <div id="verifySuccess" class="verify-state hidden">
+        <div class="verify-icon">✅</div>
+        <h2 class="verify-title">E-posta doğrulandı!</h2>
+        <p class="verify-desc">Hesabınız başarıyla oluşturuldu. Framely'e hoş geldiniz!</p>
+        <p class="verify-redirect">Yönlendiriliyorsunuz<span class="dots">...</span></p>
+      </div>
+
+      <div id="verifyError" class="verify-state hidden">
+        <div class="verify-icon">❌</div>
+        <h2 class="verify-title">Doğrulama başarısız</h2>
+        <p class="verify-desc" id="verifyErrorMsg">Bağlantı geçersiz veya süresi dolmuş.</p>
+        <a href="auth.html?tab=register" class="btn-auth" style="display:inline-block;text-align:center;text-decoration:none;margin-top:8px;">
+          Tekrar kayıt ol
+        </a>
+        <p style="text-align:center;margin-top:12px;">
+          <a href="auth.html" style="font-size:13px;color:var(--accent);font-weight:600;">Giriş yap</a>
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script type="module">
+import { verifyToken, isLoggedIn } from './js/auth.js';
+
+if (isLoggedIn()) {
+  const redir = sessionStorage.getItem('framely:authRedirect') || 'index.html';
+  sessionStorage.removeItem('framely:authRedirect');
+  window.location.href = redir;
+}
+
+const token = new URLSearchParams(window.location.search).get('token');
+
+const loading = document.getElementById('verifyLoading');
+const success = document.getElementById('verifySuccess');
+const error   = document.getElementById('verifyError');
+const errMsg  = document.getElementById('verifyErrorMsg');
+
+function show(el) {
+  [loading, success, error].forEach(e => e.classList.add('hidden'));
+  el.classList.remove('hidden');
+}
+
+if (!token) {
+  show(error);
+  errMsg.textContent = 'Doğrulama bağlantısı eksik veya hatalı.';
+} else {
+  setTimeout(() => {
+    const res = verifyToken(token);
+    if (res.ok) {
+      show(success);
+      const redir = sessionStorage.getItem('framely:authRedirect') || 'index.html';
+      sessionStorage.removeItem('framely:authRedirect');
+      setTimeout(() => { window.location.href = redir; }, 2000);
+    } else {
+      show(error);
+      errMsg.textContent = res.error;
+    }
+  }, 800);
+}
+</script>
+</body>
+</html>

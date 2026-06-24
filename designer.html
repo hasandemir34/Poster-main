@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Framely — Poster Tasarımcı</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/variables.css?v=5">
+<link rel="stylesheet" href="css/designer.css?v=5">
+<link rel="stylesheet" href="css/usermenu.css?v=5">
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <a href="index.html" class="logo">
+    <div class="logo-mark">🖼</div>
+    <span class="logo-text">Frame<span>ly</span></span>
+  </a>
+
+  <div class="header-divider"></div>
+
+  <div class="header-badge">✦ Poster Tasarımcı</div>
+
+  <div class="header-actions">
+    <button class="btn btn-ghost btn-sm" data-action="clear">Temizle</button>
+    <button class="btn btn-ghost btn-sm" data-action="autofill">Otomatik Doldur</button>
+    <button class="btn btn-ghost btn-sm" data-action="export">PNG İndir</button>
+    <button class="btn btn-primary btn-sm btn-order" data-action="order">🛒 Sipariş Ver</button>
+  </div>
+
+  <div class="header-user" id="designerUserArea"></div>
+</header>
+
+<!-- INTRO / KARŞILAMA EKRANI -->
+<div id="introScreen">
+  <div class="intro-content">
+    <div class="intro-badge">✦ Framely Poster Tasarımcı</div>
+    <h1 class="intro-title">Posterini Tasarla</h1>
+    <p class="intro-subtitle">Bir şablon seçerek hemen başla. Fotoğraflarını yükle, kolajını oluştur ve siparişini ver.</p>
+    <div class="intro-grid" id="introGrid"></div>
+  </div>
+</div>
+
+<div class="app" style="display:none">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <!-- Upload -->
+    <div class="sidebar-block">
+      <div class="block-title">Fotoğraf Ekle</div>
+      <label class="upload-zone">
+        <input type="file" id="fileInput" accept="image/*" multiple>
+        <div class="upload-icon-wrap">📁</div>
+        <strong>Tıkla veya sürükle</strong>
+        <p>JPG, PNG, WEBP<br>Çoklu seçim desteklenir</p>
+      </label>
+    </div>
+
+    <!-- Photo Strip -->
+    <div class="strip-header">
+      <span class="strip-count">Fotoğraflarım</span>
+      <span class="strip-count-badge" id="photoCount">0</span>
+    </div>
+
+    <div class="photo-strip">
+      <div class="photo-grid-strip" id="photoStrip"></div>
+    </div>
+
+    <!-- Order CTA in sidebar -->
+    <div class="sidebar-order-cta" id="sidebarOrderCta" style="display:none">
+      <div class="cta-price-label" id="ctaPriceLabel">—</div>
+      <button class="btn btn-primary btn-order-sidebar" data-action="order">🛒 Sipariş Ver</button>
+      <div class="cta-note">Ücretsiz kargo · 3-5 iş günü</div>
+    </div>
+
+  </div>
+
+  <!-- CANVAS -->
+  <div class="canvas-area">
+
+    <div class="canvas-scroll" id="canvasScroll">
+      <div id="poster">
+        <div class="poster-inner" id="posterGrid"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ZOOM / CROP MODAL -->
+<div id="zoomModal">
+  <div class="modal-card">
+    <div>
+      <div class="modal-title">Fotoğrafı Düzenle</div>
+      <div class="modal-subtitle">Sürükleyerek konumlandır · Kaydırıcı ile yakınlaştır</div>
+    </div>
+
+    <div class="zoom-container" id="zoomContainer">
+      <img id="zoomImg" draggable="false">
+    </div>
+
+    <div class="zoom-controls">
+      <label>Yakınlaştır</label>
+      <input type="range" id="zoomRange" min="100" max="400" value="100">
+      <span class="zoom-scale-label" id="zoomScaleLabel">100%</span>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" data-action="zoom-cancel">İptal</button>
+      <button class="btn btn-danger" data-action="zoom-remove">Kaldır</button>
+      <button class="btn btn-primary" data-action="zoom-confirm">Uygula</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    var preset = new URLSearchParams(window.location.search).get('preset');
+    var saved  = sessionStorage.getItem('framely:selectedPreset');
+    if (preset || saved) {
+      var s = document.getElementById('introScreen');
+      var a = document.querySelector('.app');
+      if (s) s.style.display = 'none';
+      if (a) a.style.display = 'flex';
+    }
+  })();
+</script>
+<script type="module" src="js/app.js?v=5"></script>
+</body>
+</html>

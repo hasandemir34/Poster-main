@@ -1,0 +1,20 @@
+import http.server
+import socketserver
+
+PORT = 5000
+
+class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
+    def end_headers(self):
+        self.send_header('Cache-Control', 'no-store, no-cache, must-revalidate')
+        self.send_header('Pragma', 'no-cache')
+        self.send_header('Expires', '0')
+        super().end_headers()
+
+    def log_message(self, format, *args):
+        print(f"{self.address_string()} - {format % args}", flush=True)
+
+socketserver.TCPServer.allow_reuse_address = True
+
+with socketserver.TCPServer(('0.0.0.0', PORT), NoCacheHandler) as httpd:
+    print(f"Serving HTTP on 0.0.0.0 port {PORT} ...", flush=True)
+    httpd.serve_forever()

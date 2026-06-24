@@ -1,0 +1,39 @@
+/* ── RESET ──────────────────────────────────────────────────────── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* ── DESIGN TOKENS ──────────────────────────────────────────────── */
+:root {
+  --bg:            #F4FAF6;
+  --bg2:           #EBF4EE;
+  --surface:       #ffffff;
+  --border:        #E0EDEA;
+  --border-mid:    #C8DDD8;
+  --text:          #1C2B25;
+  --text-muted:    #6B8A7E;
+  --text-light:    #A8C4BB;
+
+  --rose:          #A8D8C0;
+  --rose-dark:     #1E9E62;
+  --rose-soft:     #D6F0E5;
+  --lavender:      #B2D4C8;
+  --lavender-soft: #E4F4EF;
+  --mint:          #7ECBAA;
+  --mint-soft:     #D0EFE3;
+  --peach:         #A5D4B8;
+  --peach-soft:    #DCEEE6;
+  --sage:          #8FC4A8;
+  --sage-soft:     #D8EDDF;
+
+  --accent:        #1BAA6A;
+  --accent-dark:   #14834F;
+  --accent-bg:     #D6F0E5;
+
+  --radius-sm:  6px;
+  --radius:     10px;
+  --radius-lg:  16px;
+  --radius-xl:  28px;
+
+  --shadow-sm: 0 1px 3px rgba(28,43,37,.06), 0 1px 2px rgba(28,43,37,.04);
+  --shadow:    0 4px 16px rgba(28,43,37,.08), 0 1px 4px rgba(28,43,37,.04);
+  --shadow-lg: 0 16px 48px rgba(28,43,37,.12), 0 4px 12px rgba(28,43,37,.06);
+}

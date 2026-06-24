@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Framely — Siparişlerim</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/variables.css?v=5">
+<link rel="stylesheet" href="css/landing.css?v=5">
+<link rel="stylesheet" href="css/orders.css?v=5">
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <a href="index.html" class="logo">
+      <div class="logo-mark">🖼</div>
+      <span class="logo-text">Frame<span>ly</span></span>
+    </a>
+    <nav>
+      <a href="templates.html" class="nav-link">Poster Yap</a>
+      <a href="orders.html" class="nav-link" style="color:var(--accent)">Siparişlerim</a>
+      <button class="nav-cta" id="btnLogout" style="background:var(--text)">Çıkış Yap</button>
+    </nav>
+  </div>
+</header>
+
+<main class="orders-page">
+  <div class="orders-header">
+    <div>
+      <div class="orders-label">Hesabım</div>
+      <h1 class="orders-title">Siparişlerim</h1>
+      <p class="orders-sub" id="ordersUserInfo">—</p>
+    </div>
+    <a href="templates.html" class="btn-new">+ Yeni Poster</a>
+  </div>
+
+  <div id="ordersList"></div>
+
+  <div class="orders-empty hidden" id="ordersEmpty">
+    <div class="empty-icon">📦</div>
+    <h2 class="empty-title">Henüz sipariş yok</h2>
+    <p class="empty-sub">İlk posterinizi tasarlayıp sipariş verin!</p>
+    <a href="templates.html" class="btn-new">Poster Tasarla</a>
+  </div>
+</main>
+
+<script type="module">
+import { getCurrentUser, requireAuth, logout } from './js/auth.js?v=5';
+import { getOrders } from './js/cart.js?v=5';
+
+if (!requireAuth('orders.html')) { throw new Error('auth'); }
+const user = getCurrentUser();
+document.getElementById('ordersUserInfo').textContent = user.name + ' · ' + user.email;
+document.getElementById('btnLogout').addEventListener('click', logout);
+
+const allOrders = getOrders().filter(o => o.userId === user.id);
+
+const list = document.getElementById('ordersList');
+const empty = document.getElementById('ordersEmpty');
+
+if (allOrders.length === 0) {
+  empty.classList.remove('hidden');
+} else {
+  allOrders.forEach(order => {
+    const card = document.createElement('div');
+    card.className = 'order-card';
+
+    const statusColor = {
+      'Hazırlanıyor': '#e67e22',
+      'Kargoda': '#2980b9',
+      'Teslim Edildi': '#27ae60',
+    }[order.status] || '#888';
+
+    const date = new Date(order.createdAt).toLocaleDateString('tr-TR', {
+      day: 'numeric', month: 'long', year: 'numeric'
+    });
+
+    card.innerHTML = `
+      <div class="order-header">
+        <div class="order-id-wrap">
+          <span class="order-id">${order.id}</span>
+          <span class="order-date">${date}</span>
+        </div>
+        <span class="order-status" style="color:${statusColor};background:${statusColor}22">${order.status}</span>
+      </div>
+      <div class="order-body">
+        <div class="order-poster-icon">${order.icon || '🖼️'}</div>
+        <div class="order-info">
+          <div class="order-name">${order.presetName}</div>
+          <div class="order-desc">${order.presetDesc}</div>
+          <div class="order-details">
+            <span>${order.quantity} adet</span>
+            <span>·</span>
+            <span>****${order.cardLast4} ile ödendi</span>
+          </div>
+        </div>
+        <div class="order-total">
+          <div class="order-total-label">Toplam</div>
+          <div class="order-total-val">${order.total.toLocaleString('tr-TR')} TL</div>
+        </div>
+      </div>
+      <div class="order-footer">
+        <div class="order-addr">
+          📍 ${order.address.line}, ${order.address.district}/${order.address.city}
+        </div>
+        <a href="templates.html" class="order-reorder">Tekrar Sipariş Ver</a>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+}
+</script>
+</body>
+</html>

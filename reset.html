@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Framely — Şifre Sıfırla</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/variables.css?v=5">
+<link rel="stylesheet" href="css/auth.css?v=5">
+</head>
+<body>
+
+<div class="auth-layout">
+
+  <div class="auth-brand">
+    <a href="index.html" class="logo">
+      <div class="logo-mark">🖼</div>
+      <span class="logo-text">Frame<span>ly</span></span>
+    </a>
+    <div class="auth-brand-visual">
+      <div class="brand-poster bp1"><div class="brand-grid bg-5x10"></div></div>
+      <div class="brand-poster bp2"><div class="brand-grid bg-6x6"></div></div>
+      <div class="brand-poster bp3"><div class="brand-grid bg-7x7"></div></div>
+      <div class="brand-tagline">
+        <strong>Anılarınızı sanat eserine dönüştürün</strong>
+        <span>Posterinizi tasarlayın, kapınıza gelsin.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="auth-main">
+    <div class="auth-box">
+
+      <!-- TOKEN GEÇERSİZ / SÜRESI DOLMUŞ -->
+      <div id="stateInvalid" class="verify-state hidden">
+        <div class="verify-icon">🔗</div>
+        <h2 class="verify-title">Bağlantı geçersiz</h2>
+        <p class="verify-desc" id="invalidMsg">Şifre sıfırlama bağlantısı geçersiz veya süresi dolmuş.</p>
+        <a href="auth.html" class="btn-auth" style="display:inline-block;text-align:center;text-decoration:none;">
+          Tekrar talep et
+        </a>
+      </div>
+
+      <!-- YENİ ŞİFRE FORMU -->
+      <div id="stateForm" class="hidden">
+        <h1 class="auth-title">Yeni şifre belirle</h1>
+        <p class="auth-sub">Hesabınız için güçlü bir şifre oluşturun.</p>
+
+        <form id="resetForm" novalidate>
+          <div class="field-group">
+            <label class="field-label">Yeni Şifre <span class="field-hint">En az 6 karakter</span></label>
+            <input class="field-input" type="password" id="newPassword" placeholder="••••••••" required minlength="6" autocomplete="new-password">
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Şifre Tekrar</label>
+            <input class="field-input" type="password" id="newPassword2" placeholder="••••••••" required autocomplete="new-password">
+          </div>
+
+          <div class="auth-error" id="resetError"></div>
+
+          <button class="btn-auth" type="submit" id="resetBtn">Şifremi Güncelle</button>
+        </form>
+
+        <p class="auth-switch">
+          <a href="auth.html" style="font-size:13px;color:var(--accent);font-weight:600;">← Giriş sayfasına dön</a>
+        </p>
+      </div>
+
+      <!-- BAŞARILI -->
+      <div id="stateSuccess" class="verify-state hidden">
+        <div class="verify-icon">🔓</div>
+        <h2 class="verify-title">Şifre güncellendi!</h2>
+        <p class="verify-desc">Yeni şifreniz başarıyla kaydedildi. Şimdi giriş yapabilirsiniz.</p>
+        <p class="verify-redirect">Giriş sayfasına yönlendiriliyorsunuz<span class="dots">...</span></p>
+      </div>
+
+      <!-- YÜKLENIYOR -->
+      <div id="stateLoading" class="verify-state">
+        <div class="verify-icon spin">⏳</div>
+        <h2 class="verify-title">Kontrol ediliyor...</h2>
+        <p class="verify-desc">Lütfen bekleyin.</p>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script type="module">
+import { validateResetToken, resetPassword, isLoggedIn } from './js/auth.js';
+
+const stateLoading = document.getElementById('stateLoading');
+const stateInvalid = document.getElementById('stateInvalid');
+const stateForm    = document.getElementById('stateForm');
+const stateSuccess = document.getElementById('stateSuccess');
+const invalidMsg   = document.getElementById('invalidMsg');
+
+function show(el) {
+  [stateLoading, stateInvalid, stateForm, stateSuccess].forEach(e => e.classList.add('hidden'));
+  el.classList.remove('hidden');
+}
+
+const token = new URLSearchParams(window.location.search).get('token');
+
+if (!token) {
+  show(stateInvalid);
+  invalidMsg.textContent = 'Şifre sıfırlama bağlantısı eksik veya hatalı.';
+} else {
+  setTimeout(() => {
+    const validation = validateResetToken(token);
+    if (!validation.ok) {
+      show(stateInvalid);
+      invalidMsg.textContent = validation.error;
+    } else {
+      show(stateForm);
+    }
+  }, 600);
+}
+
+document.getElementById('resetForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const pass  = document.getElementById('newPassword').value;
+  const pass2 = document.getElementById('newPassword2').value;
+  const err   = document.getElementById('resetError');
+  const btn   = document.getElementById('resetBtn');
+  err.textContent = '';
+
+  if (pass.length < 6) { err.textContent = 'Şifre en az 6 karakter olmalıdır.'; return; }
+  if (pass !== pass2)  { err.textContent = 'Şifreler eşleşmiyor.'; return; }
+
+  btn.textContent = 'Güncelleniyor...';
+  btn.disabled = true;
+
+  const res = resetPassword(token, pass);
+  if (!res.ok) {
+    err.textContent = res.error;
+    btn.textContent = 'Şifremi Güncelle';
+    btn.disabled = false;
+    return;
+  }
+
+  show(stateSuccess);
+  setTimeout(() => { window.location.href = 'auth.html'; }, 2500);
+});
+</script>
+</body>
+</html>

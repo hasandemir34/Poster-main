@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Framely — Sipariş & Ödeme</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/variables.css?v=5">
+<link rel="stylesheet" href="css/checkout.css?v=5">
+</head>
+<body>
+
+<header class="co-header">
+  <div class="co-header-inner">
+    <a href="index.html" class="logo">
+      <div class="logo-mark">🖼</div>
+      <span class="logo-text">Frame<span>ly</span></span>
+    </a>
+    <div class="co-steps">
+      <div class="co-step active" id="step1Indicator">
+        <span class="co-step-num">1</span>
+        <span class="co-step-label">Adres</span>
+      </div>
+      <div class="co-step-line"></div>
+      <div class="co-step" id="step2Indicator">
+        <span class="co-step-num">2</span>
+        <span class="co-step-label">Ödeme</span>
+      </div>
+      <div class="co-step-line"></div>
+      <div class="co-step" id="step3Indicator">
+        <span class="co-step-num">3</span>
+        <span class="co-step-label">Onay</span>
+      </div>
+    </div>
+    <div class="co-secure">🔒 Güvenli Ödeme</div>
+  </div>
+</header>
+
+<div class="co-layout">
+
+  <!-- LEFT: FORMS -->
+  <div class="co-forms">
+
+    <!-- STEP 1: ADDRESS -->
+    <div class="co-section" id="sectionAddress">
+      <div class="co-section-title">
+        <div class="co-section-num">1</div>
+        Teslimat Adresi
+      </div>
+
+      <form id="addressForm" novalidate>
+        <div class="field-row2">
+          <div class="field-group">
+            <label class="field-label">Ad</label>
+            <input class="field-input" type="text" id="adFirstName" placeholder="Adınız" required>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Soyad</label>
+            <input class="field-input" type="text" id="adLastName" placeholder="Soyadınız" required>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Telefon</label>
+          <input class="field-input" type="tel" id="adPhone" placeholder="05XX XXX XX XX" required>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Adres Satırı</label>
+          <input class="field-input" type="text" id="adLine" placeholder="Mahalle, cadde, sokak, bina no, daire" required>
+        </div>
+
+        <div class="field-row2">
+          <div class="field-group">
+            <label class="field-label">İlçe</label>
+            <input class="field-input" type="text" id="adDistrict" placeholder="İlçe" required>
+          </div>
+          <div class="field-group">
+            <label class="field-label">İl</label>
+            <input class="field-input" type="text" id="adCity" placeholder="Şehir" required>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Posta Kodu</label>
+          <input class="field-input" type="text" id="adPostal" placeholder="34000" maxlength="5">
+        </div>
+
+        <div class="form-error" id="addressError"></div>
+
+        <button class="btn-next" type="submit">Ödemeye Geç →</button>
+      </form>
+    </div>
+
+    <!-- STEP 2: PAYMENT -->
+    <div class="co-section hidden" id="sectionPayment">
+      <div class="co-section-title">
+        <div class="co-section-num">2</div>
+        Ödeme Bilgileri
+      </div>
+
+      <div class="card-badges">
+        <span class="card-badge">VISA</span>
+        <span class="card-badge">MC</span>
+        <span class="card-badge">AMEX</span>
+        <span class="card-badge">Troy</span>
+      </div>
+
+      <form id="paymentForm" novalidate>
+        <div class="field-group">
+          <label class="field-label">Kart Üzerindeki Ad</label>
+          <input class="field-input" type="text" id="payName" placeholder="AD SOYAD" required autocomplete="cc-name">
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Kart Numarası</label>
+          <div class="card-input-wrap">
+            <input class="field-input" type="text" id="payCard" placeholder="0000 0000 0000 0000" maxlength="19" required autocomplete="cc-number">
+            <span class="card-icon" id="cardIcon">💳</span>
+          </div>
+        </div>
+
+        <div class="field-row2">
+          <div class="field-group">
+            <label class="field-label">Son Kullanma</label>
+            <input class="field-input" type="text" id="payExpiry" placeholder="AA/YY" maxlength="5" required autocomplete="cc-exp">
+          </div>
+          <div class="field-group">
+            <label class="field-label">CVV</label>
+            <input class="field-input" type="text" id="payCVV" placeholder="123" maxlength="4" required autocomplete="cc-csc">
+          </div>
+        </div>
+
+        <div class="installment-section">
+          <div class="install-title">Taksit Seçeneği</div>
+          <div class="install-options" id="installOptions"></div>
+        </div>
+
+        <div class="form-error" id="paymentError"></div>
+
+        <div class="pay-total-row">
+          <span>Ödenecek Tutar</span>
+          <strong id="payTotalLabel">—</strong>
+        </div>
+
+        <button class="btn-pay" type="submit" id="btnPay">
+          <span id="btnPayText">Ödemeyi Tamamla</span>
+          <span class="btn-pay-lock">🔒</span>
+        </button>
+
+        <button class="btn-back" type="button" id="btnBackToAddress">← Adrese Dön</button>
+      </form>
+    </div>
+
+    <!-- STEP 3: SUCCESS -->
+    <div class="co-section hidden" id="sectionSuccess">
+      <div class="success-wrap">
+        <div class="success-icon">✓</div>
+        <h2 class="success-title">Siparişiniz Alındı!</h2>
+        <p class="success-sub">Sipariş numaranız: <strong id="successOrderId"></strong></p>
+        <p class="success-desc">
+          Posteriniz hazırlanmaya başlandı. Tahmini kargo süresi <strong>3-5 iş günü</strong>.
+          Kargo takip bilgisi e-posta adresinize gönderilecektir.
+        </p>
+        <div class="success-actions">
+          <a href="orders.html" class="btn-orders">Siparişlerimi Gör</a>
+          <a href="templates.html" class="btn-new-order">Yeni Poster Tasarla</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: ORDER SUMMARY -->
+  <div class="co-summary">
+    <div class="summary-card">
+      <div class="summary-title">Sipariş Özeti</div>
+
+      <div class="summary-item" id="summaryItem">
+        <div class="summary-poster-icon" id="summaryIcon">🖼️</div>
+        <div class="summary-item-info">
+          <div class="summary-item-name" id="summaryName">—</div>
+          <div class="summary-item-desc" id="summaryDesc">—</div>
+          <div class="summary-qty-row">
+            <button class="qty-btn" id="qtyMinus">−</button>
+            <span class="qty-val" id="qtyVal">1</span>
+            <button class="qty-btn" id="qtyPlus">+</button>
+            <span class="qty-label">adet</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="summary-divider"></div>
+
+      <div class="summary-rows">
+        <div class="summary-row">
+          <span>Birim Fiyat</span>
+          <span id="summaryUnitPrice">—</span>
+        </div>
+        <div class="summary-row">
+          <span>Adet</span>
+          <span id="summaryQty">1</span>
+        </div>
+        <div class="summary-row">
+          <span>Kargo</span>
+          <span class="summary-free">Ücretsiz</span>
+        </div>
+      </div>
+
+      <div class="summary-divider"></div>
+
+      <div class="summary-total">
+        <span>Toplam</span>
+        <strong id="summaryTotal">—</strong>
+      </div>
+
+      <div class="summary-guarantee">
+        <div class="guarantee-item">✅ Renk garantili baskı</div>
+        <div class="guarantee-item">📦 Güvenli paketleme</div>
+        <div class="guarantee-item">🔄 Sorunsuz iade</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script type="module">
+import { getCurrentUser, requireAuth } from './js/auth.js?v=5';
+import { getCart, createOrder } from './js/cart.js?v=5';
+
+if (!requireAuth('checkout.html')) { throw new Error('auth'); }
+
+const user = getCurrentUser();
+const cart = getCart();
+
+if (!cart) {
+  window.location.href = 'templates.html';
+}
+
+let quantity = cart ? (cart.quantity || 1) : 1;
+let addressData = null;
+let selectedInstall = 1;
+
+function fmt(n) { return n.toLocaleString('tr-TR') + ' TL'; }
+
+function updateSummaryUI() {
+  const total = cart.price * quantity;
+  document.getElementById('summaryName').textContent = cart.presetName;
+  document.getElementById('summaryDesc').textContent = cart.presetDesc;
+  document.getElementById('summaryIcon').textContent = cart.icon || '🖼️';
+  document.getElementById('summaryUnitPrice').textContent = fmt(cart.price);
+  document.getElementById('qtyVal').textContent = quantity;
+  document.getElementById('summaryQty').textContent = quantity;
+  document.getElementById('summaryTotal').textContent = fmt(total);
+  document.getElementById('payTotalLabel').textContent = fmt(Math.ceil(total / selectedInstall));
+}
+
+if (cart) updateSummaryUI();
+
+document.getElementById('qtyMinus').addEventListener('click', () => {
+  if (quantity > 1) { quantity--; updateSummaryUI(); }
+});
+document.getElementById('qtyPlus').addEventListener('click', () => {
+  if (quantity < 10) { quantity++; updateSummaryUI(); renderInstallments(); }
+});
+
+function renderInstallments() {
+  const total = cart.price * quantity;
+  const opts = [
+    { n: 1, label: 'Tek Çekim' },
+    { n: 2, label: '2 Taksit' },
+    { n: 3, label: '3 Taksit' },
+    { n: 6, label: '6 Taksit' },
+  ];
+  const wrap = document.getElementById('installOptions');
+  wrap.innerHTML = '';
+  opts.forEach(o => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'install-btn' + (o.n === selectedInstall ? ' active' : '');
+    btn.innerHTML = `<span>${o.label}</span><span>${fmt(Math.ceil(total / o.n))}${o.n > 1 ? ' x' + o.n : ''}</span>`;
+    btn.addEventListener('click', () => {
+      selectedInstall = o.n;
+      document.getElementById('payTotalLabel').textContent = fmt(Math.ceil(total / o.n));
+      wrap.querySelectorAll('.install-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+    wrap.appendChild(btn);
+  });
+}
+if (cart) renderInstallments();
+
+function setStep(step) {
+  ['sectionAddress','sectionPayment','sectionSuccess'].forEach((id, i) => {
+    document.getElementById(id).classList.toggle('hidden', i + 1 !== step);
+  });
+  ['step1Indicator','step2Indicator','step3Indicator'].forEach((id, i) => {
+    const el = document.getElementById(id);
+    el.classList.toggle('active', i + 1 === step);
+    el.classList.toggle('done', i + 1 < step);
+  });
+}
+
+document.getElementById('addressForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const err = document.getElementById('addressError');
+  err.textContent = '';
+  const firstName = document.getElementById('adFirstName').value.trim();
+  const lastName  = document.getElementById('adLastName').value.trim();
+  const phone     = document.getElementById('adPhone').value.trim();
+  const line      = document.getElementById('adLine').value.trim();
+  const district  = document.getElementById('adDistrict').value.trim();
+  const city      = document.getElementById('adCity').value.trim();
+  if (!firstName || !lastName || !phone || !line || !district || !city) {
+    err.textContent = 'Lütfen tüm zorunlu alanları doldurun.'; return;
+  }
+  addressData = { firstName, lastName, phone, line, district, city, postal: document.getElementById('adPostal').value.trim() };
+  setStep(2);
+  updateSummaryUI();
+});
+
+const cardInput = document.getElementById('payCard');
+cardInput.addEventListener('input', function() {
+  let v = this.value.replace(/\D/g, '').substring(0, 16);
+  this.value = v.replace(/(.{4})/g, '$1 ').trim();
+  const icon = document.getElementById('cardIcon');
+  if (v.startsWith('4')) icon.textContent = '💳';
+  else if (v.startsWith('5')) icon.textContent = '💳';
+  else icon.textContent = '💳';
+});
+
+document.getElementById('payExpiry').addEventListener('input', function() {
+  let v = this.value.replace(/\D/g, '');
+  if (v.length >= 2) v = v.substring(0,2) + '/' + v.substring(2);
+  this.value = v.substring(0,5);
+});
+
+document.getElementById('btnBackToAddress').addEventListener('click', () => setStep(1));
+
+document.getElementById('paymentForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const err = document.getElementById('paymentError');
+  err.textContent = '';
+  const name   = document.getElementById('payName').value.trim();
+  const card   = document.getElementById('payCard').value.replace(/\s/g,'');
+  const expiry = document.getElementById('payExpiry').value.trim();
+  const cvv    = document.getElementById('payCVV').value.trim();
+
+  if (!name) { err.textContent = 'Kart üzerindeki ad zorunludur.'; return; }
+  if (card.length < 16) { err.textContent = 'Geçerli bir kart numarası girin.'; return; }
+  if (!expiry.match(/^\d{2}\/\d{2}$/)) { err.textContent = 'Geçerli bir son kullanma tarihi girin (AA/YY).'; return; }
+  if (cvv.length < 3) { err.textContent = 'Geçerli bir CVV girin.'; return; }
+
+  const btn = document.getElementById('btnPay');
+  btn.disabled = true;
+  document.getElementById('btnPayText').textContent = 'İşleniyor...';
+  btn.style.opacity = '.7';
+
+  await new Promise(r => setTimeout(r, 1800));
+
+  cart.quantity = quantity;
+
+  const order = createOrder({
+    user,
+    cart,
+    address: addressData,
+    payment: { cardNumber: card },
+  });
+
+  document.getElementById('successOrderId').textContent = order.id;
+  setStep(3);
+});
+</script>
+</body>
+</html>
