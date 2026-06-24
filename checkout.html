@@ -7,7 +7,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/variables.css?v=5">
+<link rel="stylesheet" href="css/landing.css?v=5">
 <link rel="stylesheet" href="css/checkout.css?v=5">
+<link rel="stylesheet" href="css/usermenu.css?v=5">
 </head>
 <body>
 
@@ -33,7 +35,7 @@
         <span class="co-step-label">Onay</span>
       </div>
     </div>
-    <div class="co-secure">🔒 Güvenli Ödeme</div>
+    <nav id="mainNav" style="margin-left:auto"></nav>
   </div>
 </header>
 
@@ -370,6 +372,12 @@ document.getElementById('paymentForm').addEventListener('submit', async e => {
 
   document.getElementById('successOrderId').textContent = order.id;
   setStep(3);
+});
+</script>
+<script type="module">
+import { renderSiteNav } from './js/header.js?v=5';
+document.addEventListener('DOMContentLoaded', () => {
+  renderSiteNav(document.getElementById('mainNav'));
 });
 </script>
 </body>

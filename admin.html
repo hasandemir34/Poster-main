@@ -277,7 +277,7 @@
           <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px">LocalStorage'daki verileri sıfırlama işlemleri.</div>
           <div style="display:flex;flex-direction:column;gap:10px">
             <button class="btn btn-danger" onclick="if(confirm('Tüm siparişler silinecek!')){localStorage.removeItem('framely:orders');showToast('Siparişler temizlendi')}">🗑️ Tüm Siparişleri Sil</button>
-            <button class="btn btn-danger" onclick="if(confirm('Ürünler varsayılana sıfırlanacak!')){localStorage.removeItem('framely:products');renderProducts();showToast('Ürünler varsayılana sıfırlandı')}">↺ Ürünleri Varsayılana Sıfırla</button>
+            <button class="btn btn-danger" onclick="if(confirm('Ürünler varsayılana sıfırlanacak!')){localStorage.removeItem('framely:products');renderProducts();renderDashboard();showToast('Ürünler varsayılana sıfırlandı')}">↺ Ürünleri Varsayılana Sıfırla</button>
           </div>
         </div>
       </div>
@@ -352,6 +352,8 @@
     </div>
     <div class="modal-body">
       <form id="productForm" onsubmit="return false">
+        <div id="productFormError" class="form-error-box"></div>
+
         <div class="form-row">
           <div class="form-group">
             <label>Ürün Adı *</label>
@@ -436,15 +438,5 @@
 </div>
 
 <script src="js/admin.js"></script>
-<script>
-  // Live cell count preview in product modal
-  ['pCols','pRows'].forEach(id => {
-    document.getElementById(id).addEventListener('input', () => {
-      const c = parseInt(document.getElementById('pCols').value) || 0;
-      const r = parseInt(document.getElementById('pRows').value) || 0;
-      document.getElementById('cellCountPreview').textContent = c * r;
-    });
-  });
-</script>
 </body>
 </html>

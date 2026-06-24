@@ -48,10 +48,72 @@ function getUsers() {
   return JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
 }
 
+function safeJsonArray(key) {
+  try {
+    const value = JSON.parse(localStorage.getItem(key) || '[]');
+    return Array.isArray(value) ? value : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function toInt(value, fallback, min, max) {
+  const parsed = parseInt(value, 10);
+  const n = Number.isFinite(parsed) ? parsed : fallback;
+  return Math.min(Math.max(n, min), max);
+}
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  }[ch]));
+}
+
+function slugifyProductId(name) {
+  const base = String(name || 'urun')
+    .toLowerCase()
+    .replace(/ğ/g, 'g')
+    .replace(/ü/g, 'u')
+    .replace(/ş/g, 's')
+    .replace(/ı/g, 'i')
+    .replace(/ö/g, 'o')
+    .replace(/ç/g, 'c')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 28) || 'urun';
+  return `${base}-${Date.now()}`;
+}
+
+function normalizeProduct(product, index = 0) {
+  const fallback = DEFAULT_PRESETS[index] || DEFAULT_PRESETS[0];
+  const name = String(product?.name || fallback.name || 'Yeni Ürün').trim();
+  return {
+    id: String(product?.id || slugifyProductId(name)),
+    name,
+    desc: String(product?.desc || fallback.desc || 'Poster').trim(),
+    cols: toInt(product?.cols, fallback.cols || 5, 1, 20),
+    rows: toInt(product?.rows, fallback.rows || 7, 1, 20),
+    gap: toInt(product?.gap, fallback.gap || 4, 0, 20),
+    pad: toInt(product?.pad, fallback.pad || 12, 0, 40),
+    orient: product?.orient === 'landscape' ? 'landscape' : 'portrait',
+    icon: String(product?.icon || fallback.icon || '🖼️').trim(),
+    price: toInt(product?.price, fallback.price || 149, 1, 999999),
+    active: product?.active !== false,
+  };
+}
+
 function getProducts() {
   const stored = localStorage.getItem(PRODUCTS_KEY);
   if (stored) {
-    try { return JSON.parse(stored); } catch(e) {}
+    const parsed = safeJsonArray(PRODUCTS_KEY).map(normalizeProduct);
+    if (parsed.length > 0) {
+      localStorage.setItem(PRODUCTS_KEY, JSON.stringify(parsed));
+      return parsed;
+    }
   }
   const prods = DEFAULT_PRESETS.map(p => ({ ...p }));
   localStorage.setItem(PRODUCTS_KEY, JSON.stringify(prods));
@@ -59,7 +121,8 @@ function getProducts() {
 }
 
 function saveProducts(list) {
-  localStorage.setItem(PRODUCTS_KEY, JSON.stringify(list));
+  const normalized = (Array.isArray(list) ? list : []).map(normalizeProduct);
+  localStorage.setItem(PRODUCTS_KEY, JSON.stringify(normalized));
 }
 
 /* ── STATE ───────────────────────────────────────────────────── */
@@ -309,35 +372,47 @@ function renderProducts() {
   }
 
   const grid = document.getElementById('productsGrid');
+  if (products.length === 0) {
+    grid.innerHTML = `
+      <div class="empty-state products-empty">
+        <div class="empty-icon">🖼️</div>
+        <div class="empty-title">Ürün bulunamadı</div>
+        <div class="empty-desc">Yeni ürün ekleyin veya arama kriterini değiştirin.</div>
+      </div>
+    `;
+    document.getElementById('productCount').textContent = '0 ürün';
+    return;
+  }
+
   grid.innerHTML = products.map(p => `
-    <div class="product-card" id="pcard-${p.id}">
+    <div class="product-card" id="pcard-${escapeHtml(p.id)}">
       <div class="product-card-preview">
         ${buildProductPreview(p)}
       </div>
       <div class="product-card-body">
         <div class="product-card-header">
           <div>
-            <div class="product-name">${p.name}</div>
+            <div class="product-name">${escapeHtml(p.name)}</div>
             <div style="margin-top:3px">
               <span class="product-status-badge ${p.active !== false ? 'active' : 'inactive'}">
                 ${p.active !== false ? '● Aktif' : '● Pasif'}
               </span>
             </div>
           </div>
-          <div class="product-icon">${p.icon || '🖼️'}</div>
+          <div class="product-icon">${escapeHtml(p.icon || '🖼️')}</div>
         </div>
-        <div class="product-desc">${p.desc}</div>
+        <div class="product-desc">${escapeHtml(p.desc)}</div>
         <div class="product-meta">
-          <span class="product-price">${p.price} ₺</span>
+          <span class="product-price">${Number(p.price).toLocaleString('tr-TR')} ₺</span>
           <span class="product-cells">${p.cols * p.rows} fotoğraf</span>
         </div>
         <div class="product-meta" style="margin-bottom:14px;font-size:12px;color:var(--text-muted)">
           ${p.cols}×${p.rows} grid · ${p.gap}px boşluk
         </div>
         <div class="product-actions">
-          <button class="btn btn-ghost btn-sm" style="flex:1" onclick="openProductModal('${p.id}')">✏️ Düzenle</button>
-          <button class="btn btn-sm" style="background:${p.active!==false?'var(--yellow-bg)':'var(--green-bg)'};color:${p.active!==false?'var(--yellow)':'var(--green)'};border:1px solid ${p.active!==false?'#ffe0a0':'#a0e0b4'}" onclick="toggleProductActive('${p.id}')">${p.active !== false ? 'Pasife Al' : 'Aktife Al'}</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteProduct('${p.id}')">🗑️</button>
+          <button class="btn btn-ghost btn-sm" style="flex:1" onclick="openProductModal('${escapeHtml(p.id)}')">✏️ Düzenle</button>
+          <button class="btn btn-sm" style="background:${p.active!==false?'var(--yellow-bg)':'var(--green-bg)'};color:${p.active!==false?'var(--yellow)':'var(--green)'};border:1px solid ${p.active!==false?'#ffe0a0':'#a0e0b4'}" onclick="toggleProductActive('${escapeHtml(p.id)}')">${p.active !== false ? 'Pasife Al' : 'Aktife Al'}</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteProduct('${escapeHtml(p.id)}')" title="Ürünü sil">🗑️</button>
         </div>
       </div>
     </div>
@@ -347,8 +422,12 @@ function renderProducts() {
 }
 
 function buildProductPreview(p) {
-  const cells = Math.min(p.cols * p.rows, 30);
-  const gridStyle = `grid-template-columns: repeat(${Math.min(p.cols, 6)}, 1fr); grid-template-rows: repeat(${Math.min(p.rows, 5)}, 1fr)`;
+  const cols = toInt(p.cols, 5, 1, 20);
+  const rows = toInt(p.rows, 7, 1, 20);
+  const cells = Math.min(cols * rows, 30);
+  const previewCols = Math.min(cols, 6);
+  const previewRows = Math.min(rows, 5);
+  const gridStyle = `grid-template-columns: repeat(${previewCols}, 1fr); grid-template-rows: repeat(${previewRows}, 1fr)`;
   let html = `<div class="product-preview-grid" style="${gridStyle}">`;
   for (let i = 0; i < cells; i++) {
     html += `<div class="product-preview-cell"></div>`;
@@ -361,6 +440,7 @@ function openProductModal(productId = null) {
   editingProductId = productId;
   const modal = document.getElementById('productModal');
   const title = document.getElementById('productModalTitle');
+  setProductFormError('');
 
   if (productId) {
     const products = getProducts();
@@ -380,32 +460,72 @@ function openProductModal(productId = null) {
   } else {
     title.textContent = 'Yeni Ürün Ekle';
     document.getElementById('productForm').reset();
+    document.getElementById('pPrice').value = '149';
+    document.getElementById('pCols').value = '5';
+    document.getElementById('pRows').value = '7';
     document.getElementById('pOrient').value = 'portrait';
     document.getElementById('pActive').value = 'true';
     document.getElementById('pGap').value = '4';
     document.getElementById('pPad').value = '12';
   }
 
+  updateCellCountPreview();
   modal.classList.add('open');
+}
+
+function setProductFormError(message) {
+  const el = document.getElementById('productFormError');
+  if (!el) return;
+  el.textContent = message;
+  el.classList.toggle('visible', Boolean(message));
+}
+
+function updateCellCountPreview() {
+  const c = parseInt(document.getElementById('pCols')?.value, 10) || 0;
+  const r = parseInt(document.getElementById('pRows')?.value, 10) || 0;
+  const el = document.getElementById('cellCountPreview');
+  if (el) el.textContent = c * r;
 }
 
 function saveProduct() {
   const name   = document.getElementById('pName').value.trim();
   const desc   = document.getElementById('pDesc').value.trim();
   const icon   = document.getElementById('pIcon').value.trim() || '🖼️';
-  const price  = parseInt(document.getElementById('pPrice').value) || 0;
-  const cols   = parseInt(document.getElementById('pCols').value) || 1;
-  const rows   = parseInt(document.getElementById('pRows').value) || 1;
-  const gap    = parseInt(document.getElementById('pGap').value) || 4;
-  const pad    = parseInt(document.getElementById('pPad').value) || 12;
+  const price  = toInt(document.getElementById('pPrice').value, 0, 0, 999999);
+  const cols   = toInt(document.getElementById('pCols').value, 0, 0, 20);
+  const rows   = toInt(document.getElementById('pRows').value, 0, 0, 20);
+  const gap    = toInt(document.getElementById('pGap').value, 4, 0, 20);
+  const pad    = toInt(document.getElementById('pPad').value, 12, 0, 40);
   const orient = document.getElementById('pOrient').value;
   const active = document.getElementById('pActive').value === 'true';
 
-  if (!name || !desc || price <= 0 || cols <= 0 || rows <= 0) {
-    showToast('Lütfen tüm zorunlu alanları doldurun.', 'error');
+  if (!name) {
+    setProductFormError('Ürün adı zorunludur.');
+    document.getElementById('pName').focus();
+    return;
+  }
+  if (!desc) {
+    setProductFormError('Açıklama zorunludur.');
+    document.getElementById('pDesc').focus();
+    return;
+  }
+  if (price <= 0) {
+    setProductFormError('Fiyat 1 TL veya daha yüksek olmalıdır.');
+    document.getElementById('pPrice').focus();
+    return;
+  }
+  if (cols < 1 || rows < 1) {
+    setProductFormError('Sütun ve satır sayısı en az 1 olmalıdır.');
+    document.getElementById('pCols').focus();
+    return;
+  }
+  if (cols * rows > 300) {
+    setProductFormError('Fotoğraf kapasitesi en fazla 300 olabilir. Daha küçük bir grid seçin.');
+    document.getElementById('pCols').focus();
     return;
   }
 
+  setProductFormError('');
   const products = getProducts();
 
   if (editingProductId) {
@@ -414,7 +534,7 @@ function saveProduct() {
     products[idx] = { ...products[idx], name, desc, icon, price, cols, rows, gap, pad, orient, active };
     showToast('Ürün güncellendi');
   } else {
-    const id = 'custom_' + Date.now();
+    const id = slugifyProductId(name);
     products.push({ id, name, desc, icon, price, cols, rows, gap, pad, orient, active });
     showToast('Yeni ürün eklendi');
   }
@@ -422,6 +542,7 @@ function saveProduct() {
   saveProducts(products);
   closeModal('productModal');
   renderProducts();
+  renderDashboard();
 }
 
 function deleteProduct(productId) {
@@ -429,6 +550,7 @@ function deleteProduct(productId) {
   const products = getProducts().filter(p => p.id !== productId);
   saveProducts(products);
   renderProducts();
+  renderDashboard();
   showToast('Ürün silindi');
 }
 
@@ -439,6 +561,7 @@ function toggleProductActive(productId) {
   products[idx].active = products[idx].active === false ? true : false;
   saveProducts(products);
   renderProducts();
+  renderDashboard();
   showToast(products[idx].active ? 'Ürün aktife alındı' : 'Ürün pasife alındı');
 }
 
@@ -570,6 +693,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Product modal save
   document.getElementById('btnSaveProduct').addEventListener('click', saveProduct);
+  ['pCols','pRows'].forEach(id => {
+    document.getElementById(id).addEventListener('input', updateCellCountPreview);
+  });
 
   // Order detail status save
   document.getElementById('btnSaveOrderStatus').addEventListener('click', saveOrderStatus);

@@ -74,6 +74,34 @@ header {
   gap: 8px;
 }
 
+.designer-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.designer-nav .nav-link {
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color .15s, background .15s;
+  white-space: nowrap;
+}
+
+.designer-nav .nav-link:hover,
+.designer-nav .nav-link.active {
+  color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.designer-nav + .header-actions {
+  margin-left: 12px;
+}
+
 /* ── BUTTONS ─────────────────────────────────────────────────────── */
 .btn {
   display: inline-flex;
@@ -867,6 +895,8 @@ header {
   header { padding: 0 12px; height: 50px; gap: 8px; }
   .header-divider { display: none; }
   .header-badge { display: none; }
+  .designer-nav .nav-link:not(.active) { display: none; }
+  .designer-nav .nav-link { padding: 5px 8px; font-size: 11px; }
   .logo-text { font-size: 15px; }
   .header-actions { gap: 6px; }
   .header-actions .btn-ghost { display: none; }

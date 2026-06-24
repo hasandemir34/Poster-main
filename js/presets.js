@@ -10,21 +10,49 @@ export const PRESETS = [
   { id: 'memories49', name: 'Anı Duvarı',  desc: '40x40 cm Poster', cols: 7,  rows: 7,  gap: 4, pad: 14, orient: 'portrait', icon: '📸', price: 199 },
 ];
 
+function toInt(value, fallback, min, max) {
+  const parsed = parseInt(value, 10);
+  const n = Number.isFinite(parsed) ? parsed : fallback;
+  return Math.min(Math.max(n, min), max);
+}
+
+function normalizePreset(preset, index = 0) {
+  const fallback = PRESETS[index] || PRESETS[0];
+  return {
+    id: String(preset?.id || fallback.id),
+    name: String(preset?.name || fallback.name || 'Poster'),
+    desc: String(preset?.desc || fallback.desc || 'Poster'),
+    cols: toInt(preset?.cols, fallback.cols || 5, 1, 20),
+    rows: toInt(preset?.rows, fallback.rows || 7, 1, 20),
+    gap: toInt(preset?.gap, fallback.gap || 4, 0, 20),
+    pad: toInt(preset?.pad, fallback.pad || 12, 0, 40),
+    orient: preset?.orient === 'landscape' ? 'landscape' : 'portrait',
+    icon: String(preset?.icon || fallback.icon || '🖼️'),
+    price: toInt(preset?.price, fallback.price || 149, 1, 999999),
+    active: preset?.active !== false,
+  };
+}
+
+function getStoredPresets() {
+  try {
+    const stored = localStorage.getItem(PRODUCTS_KEY);
+    if (!stored) return null;
+    const list = JSON.parse(stored);
+    if (!Array.isArray(list) || list.length === 0) return null;
+    return list.map(normalizePreset);
+  } catch (e) {
+    return null;
+  }
+}
+
 /**
  * Returns the active presets from localStorage (managed by admin panel).
  * Falls back to DEFAULT_PRESETS if nothing is stored yet.
  * Only returns presets where active !== false.
  */
 export function getActivePresets() {
-  try {
-    const stored = localStorage.getItem(PRODUCTS_KEY);
-    if (stored) {
-      const list = JSON.parse(stored);
-      if (Array.isArray(list) && list.length > 0) {
-        return list.filter(p => p.active !== false);
-      }
-    }
-  } catch (e) {}
+  const stored = getStoredPresets();
+  if (stored) return stored.filter(p => p.active !== false);
   return PRESETS;
 }
 
@@ -32,15 +60,10 @@ export function getActivePresets() {
  * Returns a single preset by ID from the active product list.
  */
 export function getPresetById(id) {
-  try {
-    const stored = localStorage.getItem(PRODUCTS_KEY);
-    if (stored) {
-      const list = JSON.parse(stored);
-      if (Array.isArray(list)) {
-        const found = list.find(p => p.id === id);
-        if (found) return found;
-      }
-    }
-  } catch (e) {}
+  const stored = getStoredPresets();
+  if (stored) {
+    const found = stored.find(p => p.id === id);
+    if (found) return found;
+  }
   return PRESETS.find(p => p.id === id) || null;
 }

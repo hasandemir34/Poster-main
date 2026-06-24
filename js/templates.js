@@ -1,7 +1,9 @@
 import { getActivePresets } from './presets.js?v=5';
-import { renderAuthNav } from './header.js?v=5';
+import { renderSiteNav } from './header.js?v=5';
 
-renderAuthNav(document.getElementById('mainNav'));
+document.addEventListener('DOMContentLoaded', () => {
+  renderSiteNav(document.getElementById('mainNav'), 'templates');
+});
 
 const grid = document.getElementById('templateGrid');
 

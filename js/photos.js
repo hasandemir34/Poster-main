@@ -1,21 +1,47 @@
 import { state } from './state.js?v=5';
 import { renderCells } from './grid.js?v=5';
 
-export function handleFiles(files) {
-  Array.from(files).forEach(f => {
+function loadPhotoFile(f) {
+  return new Promise(resolve => {
     const objectURL = URL.createObjectURL(f);
     const img = new Image();
     img.onload = () => {
-      state.photos.push({
+      resolve({
         id: Date.now() + Math.random(),
         src: objectURL,
         w: img.naturalWidth,
         h: img.naturalHeight,
       });
-      renderStrip();
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(objectURL);
+      resolve(null);
     };
     img.src = objectURL;
   });
+}
+
+function placePhotoInNextEmpty(photoId) {
+  const idx = state.cells.findIndex(c => !c);
+  if (idx === -1) return false;
+  state.cells[idx] = { photoId, scale: 1, offsetX: 0, offsetY: 0 };
+  return true;
+}
+
+export async function handleFiles(files, options = {}) {
+  const { placeOnCanvas = true } = options;
+  const list = Array.from(files || []).filter(f => f.type && f.type.startsWith('image/'));
+  if (list.length === 0) return;
+
+  const loaded = (await Promise.all(list.map(loadPhotoFile))).filter(Boolean);
+
+  loaded.forEach(photo => {
+    state.photos.push(photo);
+    if (placeOnCanvas) placePhotoInNextEmpty(photo.id);
+  });
+
+  renderCells();
+  renderStrip();
 }
 
 export function renderStrip() {
@@ -50,9 +76,7 @@ export function removePhoto(idx) {
 }
 
 export function addPhotoToNextEmpty(photoId) {
-  const idx = state.cells.findIndex(c => !c);
-  if (idx === -1) return;
-  state.cells[idx] = { photoId, scale: 1, offsetX: 0, offsetY: 0 };
+  if (!placePhotoInNextEmpty(photoId)) return;
   renderCells();
   renderStrip();
 }

@@ -25,10 +25,7 @@
       <span class="logo-text">Frame<span>ly</span></span>
     </a>
 
-    <nav id="mainNav">
-      <a href="#nasil-calisir" class="nav-link">Nasıl Çalışır</a>
-      <a href="templates.html" class="nav-link">Şablonlar</a>
-    </nav>
+    <nav id="mainNav"></nav>
   </div>
 </header>
 
@@ -251,9 +248,10 @@
 </footer>
 
 <script type="module">
-import { renderAuthNav } from './js/header.js?v=5';
-
-renderAuthNav(document.getElementById('mainNav'));
+import { renderSiteNav } from './js/header.js?v=5';
+document.addEventListener('DOMContentLoaded', () => {
+  renderSiteNav(document.getElementById('mainNav'), 'home');
+});
 </script>
 </body>
 </html>

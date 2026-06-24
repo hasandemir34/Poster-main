@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="css/variables.css?v=5">
 <link rel="stylesheet" href="css/landing.css?v=5">
 <link rel="stylesheet" href="css/orders.css?v=5">
+<link rel="stylesheet" href="css/usermenu.css?v=5">
 </head>
 <body>
 
@@ -18,11 +19,7 @@
       <div class="logo-mark">🖼</div>
       <span class="logo-text">Frame<span>ly</span></span>
     </a>
-    <nav>
-      <a href="templates.html" class="nav-link">Poster Yap</a>
-      <a href="orders.html" class="nav-link" style="color:var(--accent)">Siparişlerim</a>
-      <button class="nav-cta" id="btnLogout" style="background:var(--text)">Çıkış Yap</button>
-    </nav>
+    <nav id="mainNav"></nav>
   </div>
 </header>
 
@@ -49,11 +46,15 @@
 <script type="module">
 import { getCurrentUser, requireAuth, logout } from './js/auth.js?v=5';
 import { getOrders } from './js/cart.js?v=5';
+import { renderSiteNav } from './js/header.js?v=5';
 
 if (!requireAuth('orders.html')) { throw new Error('auth'); }
 const user = getCurrentUser();
 document.getElementById('ordersUserInfo').textContent = user.name + ' · ' + user.email;
-document.getElementById('btnLogout').addEventListener('click', logout);
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderSiteNav(document.getElementById('mainNav'), 'orders');
+});
 
 const allOrders = getOrders().filter(o => o.userId === user.id);
 

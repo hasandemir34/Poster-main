@@ -7,7 +7,7 @@ import { applyZoomScale, confirmZoom, closeZoomModal, removeZoomCell } from './z
 import { exportPoster } from './export.js?v=5';
 import { getCurrentUser, logout } from './auth.js?v=5';
 import { setCart } from './cart.js?v=5';
-import { renderAuthNav } from './header.js?v=5';
+import { renderSiteNav, renderUserOnly } from './header.js?v=5';
 
 function clearAll() {
   if (!confirm('Tüm fotoğrafları temizlemek istediğinize emin misiniz?')) return;
@@ -40,12 +40,15 @@ function placeOrder() {
 
 // ── INIT ────────────────────────────────────────────────────────
 function initApp() {
-  const userArea = document.getElementById('designerUserArea');
-  if (userArea) renderAuthNav(userArea);
+  renderSiteNav(document.getElementById('mainNav'), '', { includeAuth: false });
 
-  document.getElementById('fileInput')?.addEventListener('change', e =>
-    handleFiles(e.target.files)
-  );
+  const userArea = document.getElementById('designerUserArea');
+  if (userArea) renderUserOnly(userArea);
+
+  document.getElementById('fileInput')?.addEventListener('change', e => {
+    handleFiles(e.target.files);
+    e.target.value = '';
+  });
   document.getElementById('zoomRange')?.addEventListener('input', applyZoomScale);
 
   const actionMap = {

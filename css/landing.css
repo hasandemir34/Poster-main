@@ -86,6 +86,11 @@ nav {
 
 .nav-link:hover { color: var(--text); background: var(--border); }
 
+.nav-link.active {
+  color: var(--accent);
+  background: var(--accent-bg);
+}
+
 .nav-cta {
   display: inline-flex;
   align-items: center;

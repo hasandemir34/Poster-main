@@ -829,6 +829,28 @@ tr:hover td { background: var(--bg); }
   margin-top: 4px;
 }
 
+.form-error-box {
+  display: none;
+  background: #fff1f0;
+  border: 1px solid #ffd0cc;
+  color: #b42318;
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.form-error-box.visible { display: block; }
+
+.products-empty {
+  grid-column: 1 / -1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
 /* ── ORDER DETAIL MODAL ─────────────────────────────────────── */
 .order-detail-grid {
   display: grid;
