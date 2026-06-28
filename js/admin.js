@@ -302,24 +302,36 @@ function renderOrders() {
       <td>
         <div class="td-actions">
           <button class="btn btn-ghost btn-sm" onclick="openOrderDetail('${o.id}')">Detay</button>
-          <button class="btn btn-ghost btn-sm" onclick="quickStatusCycle('${o.id}')">İlerlet →</button>
+          <button class="btn btn-ghost btn-sm" onclick="downloadOrderPdf('${o.id}')">PDF</button>
+          <button class="btn btn-ghost btn-sm" onclick="quickStatusCycle('${o.id}')">Durum Seç →</button>
         </div>
       </td>
     </tr>
   `).join('');
 }
 
-function quickStatusCycle(orderId) {
+function downloadOrderPdf(orderId) {
   const orders = getOrders();
   const order = orders.find(o => o.id === orderId);
   if (!order) return;
-  const cycle = ['Hazırlanıyor', 'Baskıda', 'Kargoda', 'Teslim Edildi'];
-  const idx = cycle.indexOf(order.status || 'Hazırlanıyor');
-  if (idx === cycle.length - 1) { showToast('Sipariş zaten teslim edildi', 'info'); return; }
-  order.status = cycle[idx + 1];
-  saveOrders(orders);
-  renderOrders();
-  showToast(`Sipariş durumu: ${order.status}`);
+
+  if (!order.pdfDataUri) {
+    showToast('Bu sipariş için PDF oluşturulamadı.', 'error');
+    return;
+  }
+
+  const link = document.createElement('a');
+  link.href = order.pdfDataUri;
+  link.download = `${order.id}.pdf`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  showToast('PDF indirildi');
+}
+
+function quickStatusCycle(orderId) {
+  openOrderDetail(orderId);
+  showToast('Sipariş durumunu seçin', 'info');
 }
 
 function openOrderDetail(orderId) {

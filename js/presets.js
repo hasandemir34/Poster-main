@@ -1,5 +1,6 @@
-const PRODUCTS_KEY = 'framely:products';
+import { supabase } from './supabase.js';
 
+// Supabase erişilemezse kullanılacak yerel yedek (DB seed ile birebir).
 export const PRESETS = [
   { id: 'classic50',  name: 'Klasik 50',  desc: '30x45 cm Poster', cols: 5,  rows: 10, gap: 4, pad: 12, orient: 'portrait', icon: '🖼️', price: 179 },
   { id: 'medium96',   name: 'Orta Grid',   desc: '40x60 cm Poster', cols: 8,  rows: 12, gap: 4, pad: 14, orient: 'portrait', icon: '📏', price: 229 },
@@ -10,60 +11,48 @@ export const PRESETS = [
   { id: 'memories49', name: 'Anı Duvarı',  desc: '40x40 cm Poster', cols: 7,  rows: 7,  gap: 4, pad: 14, orient: 'portrait', icon: '📸', price: 199 },
 ];
 
-function toInt(value, fallback, min, max) {
-  const parsed = parseInt(value, 10);
-  const n = Number.isFinite(parsed) ? parsed : fallback;
-  return Math.min(Math.max(n, min), max);
-}
-
-function normalizePreset(preset, index = 0) {
-  const fallback = PRESETS[index] || PRESETS[0];
+// DB satırını uygulama preset nesnesine çevirir (descr → desc).
+function rowToPreset(row) {
   return {
-    id: String(preset?.id || fallback.id),
-    name: String(preset?.name || fallback.name || 'Poster'),
-    desc: String(preset?.desc || fallback.desc || 'Poster'),
-    cols: toInt(preset?.cols, fallback.cols || 5, 1, 20),
-    rows: toInt(preset?.rows, fallback.rows || 7, 1, 20),
-    gap: toInt(preset?.gap, fallback.gap || 4, 0, 20),
-    pad: toInt(preset?.pad, fallback.pad || 12, 0, 40),
-    orient: preset?.orient === 'landscape' ? 'landscape' : 'portrait',
-    icon: String(preset?.icon || fallback.icon || '🖼️'),
-    price: toInt(preset?.price, fallback.price || 149, 1, 999999),
-    active: preset?.active !== false,
+    id: row.id,
+    name: row.name,
+    desc: row.descr || '',
+    cols: row.cols,
+    rows: row.rows,
+    gap: row.gap,
+    pad: row.pad,
+    orient: row.orient === 'landscape' ? 'landscape' : 'portrait',
+    icon: row.icon || '🖼️',
+    price: Number(row.price),
+    width: row.width ?? null,
+    height: row.height ?? null,
+    active: row.active !== false,
   };
 }
 
-function getStoredPresets() {
-  try {
-    const stored = localStorage.getItem(PRODUCTS_KEY);
-    if (!stored) return null;
-    const list = JSON.parse(stored);
-    if (!Array.isArray(list) || list.length === 0) return null;
-    return list.map(normalizePreset);
-  } catch (e) {
-    return null;
+/** Aktif ürünleri Supabase'ten döner; hata olursa yerel yedeğe düşer. */
+export async function getActivePresets() {
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('active', true)
+    .order('sort_order', { ascending: true });
+  if (error || !data) {
+    console.error('Ürünler alınamadı, yerel yedek kullanılıyor:', error);
+    return PRESETS;
   }
+  return data.map(rowToPreset);
 }
 
-/**
- * Returns the active presets from localStorage (managed by admin panel).
- * Falls back to DEFAULT_PRESETS if nothing is stored yet.
- * Only returns presets where active !== false.
- */
-export function getActivePresets() {
-  const stored = getStoredPresets();
-  if (stored) return stored.filter(p => p.active !== false);
-  return PRESETS;
-}
-
-/**
- * Returns a single preset by ID from the active product list.
- */
-export function getPresetById(id) {
-  const stored = getStoredPresets();
-  if (stored) {
-    const found = stored.find(p => p.id === id);
-    if (found) return found;
+/** Tek bir ürünü id ile döner (aktif/pasif fark etmeksizin). */
+export async function getPresetById(id) {
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('id', id)
+    .single();
+  if (error || !data) {
+    return PRESETS.find(p => p.id === id) || null;
   }
-  return PRESETS.find(p => p.id === id) || null;
+  return rowToPreset(data);
 }

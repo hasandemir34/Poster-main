@@ -4,9 +4,10 @@ import { renderCells, selectPreset } from './grid.js?v=5';
 import { getActivePresets, getPresetById } from './presets.js?v=5';
 import { zoomIn, fitPoster } from './canvas.js?v=5';
 import { applyZoomScale, confirmZoom, closeZoomModal, removeZoomCell } from './zoom.js?v=5';
-import { exportPoster } from './export.js?v=5';
+import { exportPoster, renderPosterToCanvas } from './export.js?v=5';
 import { getCurrentUser, logout } from './auth.js?v=5';
 import { setCart } from './cart.js?v=5';
+import { buildDesignPdfBlob, uploadDesignPdf } from './pdf.js';
 import { renderSiteNav, renderUserOnly } from './header.js?v=5';
 
 function clearAll() {
@@ -16,30 +17,56 @@ function clearAll() {
   renderStrip();
 }
 
-function placeOrder() {
-  const preset = getPresetById(state.presetId);
+let placingOrder = false;
+
+async function placeOrder() {
+  if (placingOrder) return;
+
+  const preset = await getPresetById(state.presetId);
   if (!preset) { alert('Lütfen önce bir şablon seçin.'); return; }
 
-  const user = getCurrentUser();
+  const hasPhoto = state.cells.some(c => c);
+  if (!hasPhoto) { alert('Sipariş vermeden önce en az bir fotoğraf ekleyin.'); return; }
+
+  const user = await getCurrentUser();
   if (!user) {
     sessionStorage.setItem('framely:authRedirect', 'checkout.html');
     window.location.href = 'auth.html';
     return;
   }
 
-  setCart({
-    preset: preset.id,
-    presetName: preset.name,
-    presetDesc: preset.desc,
-    price: preset.price,
-    icon: preset.icon,
-    quantity: 1,
-  });
-  window.location.href = 'checkout.html';
+  placingOrder = true;
+  const cta = document.getElementById('sidebarOrderCta');
+  const prevLabel = cta?.textContent;
+  if (cta) { cta.style.pointerEvents = 'none'; cta.style.opacity = '.6'; cta.textContent = 'Tasarım hazırlanıyor...'; }
+
+  try {
+    // Tasarımı blob fotoğraflar henüz canlıyken (designer'dayken) yakala.
+    const canvas  = await renderPosterToCanvas();
+    const pdfBlob = buildDesignPdfBlob(canvas);
+    const path    = await uploadDesignPdf(pdfBlob, user.id);
+    if (!path) throw new Error('upload-failed');
+
+    setCart({
+      preset: preset.id,
+      presetName: preset.name,
+      presetDesc: preset.desc,
+      price: preset.price,
+      icon: preset.icon,
+      quantity: 1,
+      designPdfPath: path,
+    });
+    window.location.href = 'checkout.html';
+  } catch (err) {
+    console.error('Tasarım kaydedilemedi:', err);
+    alert('Tasarımınız kaydedilemedi. Lütfen tekrar deneyin.');
+    placingOrder = false;
+    if (cta) { cta.style.pointerEvents = ''; cta.style.opacity = ''; cta.textContent = prevLabel; }
+  }
 }
 
 // ── INIT ────────────────────────────────────────────────────────
-function initApp() {
+async function initApp() {
   renderSiteNav(document.getElementById('mainNav'), '', { includeAuth: false });
 
   const userArea = document.getElementById('designerUserArea');

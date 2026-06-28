@@ -33,10 +33,11 @@ function preloadImages() {
 }
 
 /**
- * HTML5 Canvas kullanarak posteri yüksek çözünürlükte çizer ve PNG indirir.
- * html2canvas bağımlılığı tamamen kaldırılmıştır.
+ * Posteri yüksek çözünürlükte bir <canvas> üzerine çizer ve döner.
+ * Hem PNG export hem PDF üretimi (pdf.js) bu fonksiyonu paylaşır.
+ * @returns {Promise<HTMLCanvasElement>}
  */
-export async function exportPoster() {
+export async function renderPosterToCanvas() {
   // ── 1. Ekrandaki poster geometrisini hesapla (grid.js mantığıyla birebir) ─
   const baseW   = state.posterWidth ?? (state.orient === 'landscape' ? 740 : 520);
   const cellW   = (baseW - state.pad * 2 - state.gap * (state.cols - 1)) / state.cols;
@@ -58,15 +59,8 @@ export async function exportPoster() {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   // ── 3. Fotoğrafları önceden yükle ─────────────────────────────
-  let imgMap;
-  try {
-    const loaded = await preloadImages();
-    imgMap = new Map(loaded.map(l => [l.id, l.img]));
-  } catch (err) {
-    alert('Dışa aktarma sırasında bir görsel yüklenemedi.');
-    console.error(err);
-    return;
-  }
+  const loaded = await preloadImages();
+  const imgMap = new Map(loaded.map(l => [l.id, l.img]));
 
   // ── 4. Hücreleri çiz ──────────────────────────────────────────
   for (let i = 0; i < state.cells.length; i++) {
@@ -111,7 +105,23 @@ export async function exportPoster() {
     ctx.restore();
   }
 
-  // ── 5. PNG olarak indir ───────────────────────────────────────
+  return canvas;
+}
+
+/**
+ * HTML5 Canvas kullanarak posteri yüksek çözünürlükte çizer ve PNG indirir.
+ */
+export async function exportPoster() {
+  let canvas;
+  try {
+    canvas = await renderPosterToCanvas();
+  } catch (err) {
+    alert('Dışa aktarma sırasında bir görsel yüklenemedi.');
+    console.error(err);
+    return;
+  }
+
+  // ── PNG olarak indir ──────────────────────────────────────────
   canvas.toBlob(blob => {
     if (!blob) return;
     const url  = URL.createObjectURL(blob);

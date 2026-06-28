@@ -1,183 +1,112 @@
-const USERS_KEY   = 'framely:users';
-const PENDING_KEY = 'framely:pending_users';
-const SESSION_KEY = 'framely:session';
-const RESET_KEY   = 'framely:reset_tokens';
+import { supabase } from './supabase.js';
 
-export function getUsers() {
-  return JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
+// ── YARDIMCILAR ──────────────────────────────────────────────────────────────
+function siteBaseUrl() {
+  return window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/');
 }
 
-function saveUsers(users) {
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
-}
-
-function getPending() {
-  return JSON.parse(localStorage.getItem(PENDING_KEY) || '[]');
-}
-
-function savePending(list) {
-  localStorage.setItem(PENDING_KEY, JSON.stringify(list));
-}
-
-function getResetTokens() {
-  return JSON.parse(localStorage.getItem(RESET_KEY) || '[]');
-}
-
-function saveResetTokens(list) {
-  localStorage.setItem(RESET_KEY, JSON.stringify(list));
-}
-
-function generateToken() {
-  const arr = new Uint8Array(32);
-  crypto.getRandomValues(arr);
-  return Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-export function registerPending(name, email, password) {
-  const users = getUsers();
-  if (users.find(u => u.email === email)) {
-    return { ok: false, error: 'Bu e-posta adresi zaten kayıtlı.' };
-  }
-
-  const pending = getPending().filter(p => p.email !== email);
-  const token = generateToken();
-  const expiresAt = Date.now() + 24 * 60 * 60 * 1000;
-
-  pending.push({ name, email, password, token, expiresAt });
-  savePending(pending);
-
-  return { ok: true, token };
-}
-
-export function verifyToken(token) {
-  const pending = getPending();
-  const idx = pending.findIndex(p => p.token === token);
-
-  if (idx === -1) return { ok: false, error: 'Doğrulama bağlantısı geçersiz.' };
-
-  const entry = pending[idx];
-  if (Date.now() > entry.expiresAt) {
-    pending.splice(idx, 1);
-    savePending(pending);
-    return { ok: false, error: 'Doğrulama bağlantısının süresi dolmuş. Lütfen tekrar kayıt olun.' };
-  }
-
-  const users = getUsers();
-  if (users.find(u => u.email === entry.email)) {
-    pending.splice(idx, 1);
-    savePending(pending);
-    return { ok: false, error: 'Bu e-posta zaten doğrulanmış. Giriş yapabilirsiniz.' };
-  }
-
-  const user = {
-    id: Date.now().toString(),
-    name: entry.name,
-    email: entry.email,
-    password: entry.password,
-    createdAt: new Date().toISOString(),
-    verified: true,
+function mapUser(user) {
+  if (!user) return null;
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.user_metadata?.name || (user.email ? user.email.split('@')[0] : 'Kullanıcı'),
   };
-  users.push(user);
-  saveUsers(users);
-
-  pending.splice(idx, 1);
-  savePending(pending);
-
-  setSession(user);
-  return { ok: true, user };
 }
 
-export function resendVerification(email) {
-  const pending = getPending();
-  const entry = pending.find(p => p.email === email);
-  if (!entry) return { ok: false, error: 'Bu e-posta için bekleyen kayıt bulunamadı.' };
-  const token = generateToken();
-  entry.token = token;
-  entry.expiresAt = Date.now() + 24 * 60 * 60 * 1000;
-  savePending(pending);
-  return { ok: true, token, name: entry.name };
+// ── OTURUM ────────────────────────────────────────────────────────────────────
+/** Geçerli kullanıcıyı döner ({id,name,email}) veya null. */
+export async function getCurrentUser() {
+  const { data } = await supabase.auth.getSession();
+  return mapUser(data?.session?.user || null);
 }
 
-export function requestPasswordReset(email) {
-  const users = getUsers();
-  const user = users.find(u => u.email === email);
-  if (!user) {
-    return { ok: false, error: 'Bu e-posta adresi ile kayıtlı bir hesap bulunamadı.' };
-  }
-
-  const tokens = getResetTokens().filter(t => t.email !== email);
-  const token = generateToken();
-  const expiresAt = Date.now() + 60 * 60 * 1000;
-
-  tokens.push({ email, token, expiresAt });
-  saveResetTokens(tokens);
-
-  return { ok: true, token, name: user.name };
+export async function isLoggedIn() {
+  const { data } = await supabase.auth.getSession();
+  return !!data?.session;
 }
 
-export function validateResetToken(token) {
-  const tokens = getResetTokens();
-  const entry = tokens.find(t => t.token === token);
-  if (!entry) return { ok: false, error: 'Şifre sıfırlama bağlantısı geçersiz.' };
-  if (Date.now() > entry.expiresAt) {
-    saveResetTokens(tokens.filter(t => t.token !== token));
-    return { ok: false, error: 'Şifre sıfırlama bağlantısının süresi dolmuş. Lütfen yeniden talep edin.' };
-  }
-  return { ok: true, email: entry.email };
+/** Giriş gerektiren sayfalarda kullanılır. Giriş yoksa auth.html'e yönlendirir. */
+export async function requireAuth(redirectPath) {
+  if (await isLoggedIn()) return true;
+  sessionStorage.setItem('framely:authRedirect', redirectPath || window.location.href);
+  window.location.href = 'auth.html';
+  return false;
 }
 
-export function resetPassword(token, newPassword) {
-  const validation = validateResetToken(token);
-  if (!validation.ok) return validation;
-
-  const users = getUsers();
-  const user = users.find(u => u.email === validation.email);
-  if (!user) return { ok: false, error: 'Kullanıcı bulunamadı.' };
-
-  user.password = newPassword;
-  saveUsers(users);
-
-  saveResetTokens(getResetTokens().filter(t => t.token !== token));
-
-  return { ok: true };
-}
-
-export function login(email, password) {
-  const pending = getPending();
-  if (pending.find(p => p.email === email && p.password === password)) {
-    return { ok: false, error: 'E-posta adresiniz henüz doğrulanmamış. Gelen kutunuzu kontrol edin.' };
-  }
-
-  const users = getUsers();
-  const user = users.find(u => u.email === email && u.password === password);
-  if (!user) return { ok: false, error: 'E-posta veya şifre hatalı.' };
-  setSession(user);
-  return { ok: true, user };
-}
-
-export function logout() {
-  localStorage.removeItem(SESSION_KEY);
+export async function logout() {
+  await supabase.auth.signOut();
   window.location.href = 'index.html';
 }
 
-export function setSession(user) {
-  localStorage.setItem(SESSION_KEY, JSON.stringify({ id: user.id, name: user.name, email: user.email }));
+/** Geçerli kullanıcının admin olup olmadığını profiles tablosundan kontrol eder. */
+export async function isAdmin() {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const uid = sessionData?.session?.user?.id;
+  if (!uid) return false;
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('is_admin')
+    .eq('id', uid)
+    .single();
+  if (error) return false;
+  return data?.is_admin === true;
 }
 
-export function getCurrentUser() {
-  const s = localStorage.getItem(SESSION_KEY);
-  return s ? JSON.parse(s) : null;
+// ── KAYIT / GİRİŞ ───────────────────────────────────────────────────────────
+export async function signUp(name, email, password) {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: { name },
+      emailRedirectTo: `${siteBaseUrl()}auth.html?confirmed=1`,
+    },
+  });
+  if (error) return { ok: false, error: translateError(error.message) };
+  return { ok: true, data };
 }
 
-export function isLoggedIn() {
-  return !!getCurrentUser();
+export async function signIn(email, password) {
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) return { ok: false, error: translateError(error.message) };
+  return { ok: true, user: mapUser(data.user) };
 }
 
-export function requireAuth(redirectPath) {
-  if (!isLoggedIn()) {
-    sessionStorage.setItem('framely:authRedirect', redirectPath || window.location.href);
-    window.location.href = 'auth.html';
-    return false;
-  }
-  return true;
+export async function resendSignupEmail(email) {
+  const { error } = await supabase.auth.resend({
+    type: 'signup',
+    email,
+    options: { emailRedirectTo: `${siteBaseUrl()}auth.html?confirmed=1` },
+  });
+  if (error) return { ok: false, error: translateError(error.message) };
+  return { ok: true };
+}
+
+// ── ŞİFRE SIFIRLAMA ──────────────────────────────────────────────────────────
+export async function sendPasswordReset(email) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${siteBaseUrl()}reset.html`,
+  });
+  if (error) return { ok: false, error: translateError(error.message) };
+  return { ok: true };
+}
+
+/** reset.html'de recovery session açıkken yeni şifreyi kaydeder. */
+export async function updatePassword(newPassword) {
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  if (error) return { ok: false, error: translateError(error.message) };
+  return { ok: true };
+}
+
+// ── HATA ÇEVİRİSİ ────────────────────────────────────────────────────────────
+function translateError(msg) {
+  const m = (msg || '').toLowerCase();
+  if (m.includes('invalid login credentials')) return 'E-posta veya şifre hatalı.';
+  if (m.includes('email not confirmed'))       return 'E-posta adresiniz henüz doğrulanmamış. Gelen kutunuzu kontrol edin.';
+  if (m.includes('user already registered'))    return 'Bu e-posta adresi zaten kayıtlı.';
+  if (m.includes('password should be'))          return 'Şifre en az 6 karakter olmalıdır.';
+  if (m.includes('unable to validate email'))    return 'Geçerli bir e-posta adresi girin.';
+  if (m.includes('for security purposes'))       return 'Çok sık deneme yaptınız. Lütfen biraz bekleyin.';
+  return msg || 'Bir hata oluştu. Lütfen tekrar deneyin.';
 }
