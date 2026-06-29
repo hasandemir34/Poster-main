@@ -1,4 +1,4 @@
-const EMAILJS_PUBLIC_KEY        = 'K073_0I-oDghNXeMN';
+﻿const EMAILJS_PUBLIC_KEY        = 'K073_0I-oDghNXeMN';
 const EMAILJS_SERVICE_ID        = 'service_3d9zvyi';
 const EMAILJS_TEMPLATE_ID       = 'template_ze69og2';
 const EMAILJS_RESET_TEMPLATE_ID = 'template_gef9k3j';

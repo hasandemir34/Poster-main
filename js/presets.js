@@ -1,4 +1,4 @@
-import { supabase } from './supabase.js';
+﻿import { supabase } from './supabase.js';
 
 // Supabase erişilemezse kullanılacak yerel yedek (DB seed ile birebir).
 export const PRESETS = [

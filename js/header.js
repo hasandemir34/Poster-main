@@ -1,4 +1,4 @@
-import { getCurrentUser, logout } from './auth.js?v=5';
+﻿import { getCurrentUser, logout } from './auth.js?v=6';
 
 const defaultLinks = [
   { key: 'home', href: 'index.html', text: 'Ana Sayfa' },
@@ -48,7 +48,7 @@ function createUserMenu(user, idSuffix = '') {
   return userMenu;
 }
 
-export function renderSiteNav(navEl, activeKey = '', options = {}) {
+export async function renderSiteNav(navEl, activeKey = '', options = {}) {
   if (!navEl) return;
 
   navEl.innerHTML = '';
@@ -63,14 +63,14 @@ export function renderSiteNav(navEl, activeKey = '', options = {}) {
   });
 
   if (options.includeAuth !== false) {
-    renderAuthNav(navEl);
+    await renderAuthNav(navEl);
   }
 }
 
-export function renderAuthNav(navEl) {
+export async function renderAuthNav(navEl) {
   if (!navEl) return;
   clearDynamicNav(navEl);
-  const user = getCurrentUser();
+  const user = await getCurrentUser();
 
   if (user) {
     navEl.appendChild(createUserMenu(user));
@@ -98,10 +98,10 @@ export function renderAuthNav(navEl) {
  * Designer gibi kendi nav yapısı olan sayfalar için kullanın.
  * Kullanıcı giriş yapmamışsa Giriş Yap butonu gösterir.
  */
-export function renderUserOnly(containerEl) {
+export async function renderUserOnly(containerEl) {
   if (!containerEl) return;
   clearDynamicNav(containerEl);
-  const user = getCurrentUser();
+  const user = await getCurrentUser();
 
   if (user) {
     containerEl.appendChild(createUserMenu(user, 'D'));

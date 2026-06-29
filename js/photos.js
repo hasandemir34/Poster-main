@@ -1,5 +1,5 @@
-import { state } from './state.js?v=5';
-import { renderCells } from './grid.js?v=5';
+﻿import { state } from './state.js?v=6';
+import { renderCells } from './grid.js?v=6';
 
 function loadPhotoFile(f) {
   return new Promise(resolve => {

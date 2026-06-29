@@ -1,4 +1,4 @@
-import { state } from './state.js?v=5';
+﻿import { state } from './state.js?v=6';
 
 export function setPosterScale(s) {
   state.posterScale = Math.max(0.2, Math.min(3, s));

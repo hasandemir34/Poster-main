@@ -1,14 +1,14 @@
-import { state } from './state.js?v=5';
-import { handleFiles, autoFill, renderStrip } from './photos.js?v=5';
-import { renderCells, selectPreset } from './grid.js?v=5';
-import { getActivePresets, getPresetById } from './presets.js?v=5';
-import { zoomIn, fitPoster } from './canvas.js?v=5';
-import { applyZoomScale, confirmZoom, closeZoomModal, removeZoomCell } from './zoom.js?v=5';
-import { exportPoster, renderPosterToCanvas } from './export.js?v=5';
-import { getCurrentUser, logout } from './auth.js?v=5';
-import { setCart } from './cart.js?v=5';
+﻿import { state } from './state.js?v=6';
+import { handleFiles, autoFill, renderStrip } from './photos.js?v=6';
+import { renderCells, selectPreset } from './grid.js?v=6';
+import { getActivePresets, getPresetById } from './presets.js?v=6';
+import { zoomIn, fitPoster } from './canvas.js?v=6';
+import { applyZoomScale, confirmZoom, closeZoomModal, removeZoomCell } from './zoom.js?v=6';
+import { exportPoster, renderPosterToCanvas } from './export.js?v=6';
+import { getCurrentUser, logout } from './auth.js?v=6';
+import { setCart } from './cart.js?v=6';
 import { buildDesignPdfBlob, uploadDesignPdf } from './pdf.js';
-import { renderSiteNav, renderUserOnly } from './header.js?v=5';
+import { renderSiteNav, renderUserOnly } from './header.js?v=6';
 
 function clearAll() {
   if (!confirm('Tüm fotoğrafları temizlemek istediğinize emin misiniz?')) return;
@@ -67,10 +67,10 @@ async function placeOrder() {
 
 // ── INIT ────────────────────────────────────────────────────────
 async function initApp() {
-  renderSiteNav(document.getElementById('mainNav'), '', { includeAuth: false });
+  await renderSiteNav(document.getElementById('mainNav'), '', { includeAuth: false });
 
   const userArea = document.getElementById('designerUserArea');
-  if (userArea) renderUserOnly(userArea);
+  if (userArea) await renderUserOnly(userArea);
 
   document.getElementById('fileInput')?.addEventListener('change', e => {
     handleFiles(e.target.files);
@@ -102,15 +102,15 @@ async function initApp() {
 
   const urlPreset   = new URLSearchParams(window.location.search).get('preset');
   const savedPreset = sessionStorage.getItem('framely:selectedPreset');
-  const activePresets = getActivePresets();
+  const activePresets = await getActivePresets();
 
   const selectedPreset = activePresets.find(p => p.id === urlPreset)?.id
     ?? activePresets.find(p => p.id === savedPreset)?.id;
 
   if (selectedPreset) {
-    startWithPreset(selectedPreset);
+    await startWithPreset(selectedPreset);
   } else {
-    renderIntroGrid();
+    await renderIntroGrid();
   }
 }
 
@@ -121,11 +121,12 @@ if (document.readyState === 'loading') {
 }
 
 // ── INTRO SCREEN ────────────────────────────────────────────────
-function renderIntroGrid() {
+async function renderIntroGrid() {
   const grid = document.getElementById('introGrid');
   if (!grid) return;
 
-  getActivePresets().forEach(p => {
+  const activePresets = await getActivePresets();
+  activePresets.forEach(p => {
     const card = document.createElement('div');
     card.className = 'intro-card';
     card.innerHTML = `
@@ -140,7 +141,7 @@ function renderIntroGrid() {
   });
 }
 
-function startWithPreset(presetId) {
+async function startWithPreset(presetId) {
   const introScreen = document.getElementById('introScreen');
   const app = document.querySelector('.app');
 
@@ -151,9 +152,9 @@ function startWithPreset(presetId) {
   introScreen.classList.add('hidden');
   app.style.display = 'flex';
 
-  selectPreset(presetId);
+  await selectPreset(presetId);
 
-  const preset = getPresetById(presetId);
+  const preset = await getPresetById(presetId);
   if (preset) {
     const cta   = document.getElementById('sidebarOrderCta');
     const label = document.getElementById('ctaPriceLabel');

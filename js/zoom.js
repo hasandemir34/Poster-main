@@ -1,6 +1,6 @@
-import { state } from './state.js?v=5';
-import { renderCells } from './grid.js?v=5';
-import { renderStrip } from './photos.js?v=5';
+﻿import { state } from './state.js?v=6';
+import { renderCells } from './grid.js?v=6';
+import { renderStrip } from './photos.js?v=6';
 
 export function openZoomModal(cellIdx, cellW, cellH) {
   const c = state.cells[cellIdx];

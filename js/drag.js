@@ -1,6 +1,6 @@
-import { state } from './state.js?v=5';
-import { renderCells } from './grid.js?v=5';
-import { openZoomModal } from './zoom.js?v=5';
+﻿import { state } from './state.js?v=6';
+import { renderCells } from './grid.js?v=6';
+import { openZoomModal } from './zoom.js?v=6';
 
 export function startCellDrag(fromIdx, e, cellW, cellH) {
   const poster     = document.getElementById('poster');

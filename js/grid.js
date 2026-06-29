@@ -1,13 +1,13 @@
-import { state } from './state.js?v=5';
-import { renderStrip } from './photos.js?v=5';
-import { openZoomModal } from './zoom.js?v=5';
-import { startCellDrag } from './drag.js?v=5';
-import { getPresetById } from './presets.js?v=5';
+﻿import { state } from './state.js?v=6';
+import { renderStrip } from './photos.js?v=6';
+import { openZoomModal } from './zoom.js?v=6';
+import { startCellDrag } from './drag.js?v=6';
+import { getPresetById } from './presets.js?v=6';
 
 
 
-export function selectPreset(presetId) {
-  const preset = getPresetById(presetId);
+export async function selectPreset(presetId) {
+  const preset = await getPresetById(presetId);
   if (!preset) return;
 
   state.cols = preset.cols;

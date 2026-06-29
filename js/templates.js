@@ -1,8 +1,8 @@
-import { getActivePresets } from './presets.js?v=5';
-import { renderSiteNav } from './header.js?v=5';
+﻿import { getActivePresets } from './presets.js?v=6';
+import { renderSiteNav } from './header.js?v=6';
 
-document.addEventListener('DOMContentLoaded', () => {
-  renderSiteNav(document.getElementById('mainNav'), 'templates');
+document.addEventListener('DOMContentLoaded', async () => {
+  await renderSiteNav(document.getElementById('mainNav'), 'templates');
 });
 
 const grid = document.getElementById('templateGrid');
@@ -12,13 +12,14 @@ function isSquarePreset(preset) {
   return m ? m[1] === m[2] : false;
 }
 
-function renderTemplates() {
+async function renderTemplates() {
   if (!grid) return;
 
-  const presets = getActivePresets();
+  grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text-muted)">Şablonlar yükleniyor...</div>';
+  const presets = await getActivePresets();
   grid.innerHTML = '';
 
-  if (presets.length === 0) {
+  if (!presets || presets.length === 0) {
     grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--text-muted)">
       <div style="font-size:48px;margin-bottom:16px">📦</div>
       <div style="font-size:18px;font-weight:600">Şu anda aktif şablon yok</div>

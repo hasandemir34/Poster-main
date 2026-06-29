@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
@@ -7,8 +7,8 @@
 <title>Framely — Giriş / Kayıt</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/variables.css?v=5">
-<link rel="stylesheet" href="css/auth.css?v=5">
+<link rel="stylesheet" href="css/variables.css?v=6">
+<link rel="stylesheet" href="css/auth.css?v=6">
 </head>
 <body>
 
@@ -151,14 +151,16 @@
 </div>
 
 <script type="module">
-import { login, registerPending, resendVerification, requestPasswordReset, isLoggedIn } from './js/auth.js?v=5';
-import { sendVerificationEmail, sendPasswordResetEmail, isEmailConfigured, isResetConfigured } from './js/email.js?v=5';
+import { signIn, signUp, resendSignupEmail, sendPasswordReset, isLoggedIn } from './js/auth.js?v=6';
 
-if (isLoggedIn()) {
-  const redir = sessionStorage.getItem('framely:authRedirect') || 'index.html';
-  sessionStorage.removeItem('framely:authRedirect');
-  window.location.href = redir;
-}
+// Zaten giriş yapılmışsa yönlendir
+(async () => {
+  if (await isLoggedIn()) {
+    const redir = sessionStorage.getItem('framely:authRedirect') || 'index.html';
+    sessionStorage.removeItem('framely:authRedirect');
+    window.location.href = redir;
+  }
+})();
 
 const tabs         = document.querySelectorAll('.auth-tab');
 const authTabs     = document.getElementById('authTabs');
@@ -210,19 +212,28 @@ document.querySelectorAll('.auth-switch-btn[data-goto]').forEach(btn => {
 
 document.getElementById('forgotBtn').addEventListener('click', showForgotPanel);
 
-loginForm.addEventListener('submit', e => {
+// ── GİRİŞ FORMU ──────────────────────────────────────────────────────────────
+loginForm.addEventListener('submit', async e => {
   e.preventDefault();
   const email = document.getElementById('loginEmail').value.trim();
   const pass  = document.getElementById('loginPassword').value;
   const err   = document.getElementById('loginError');
+  const btn   = loginForm.querySelector('button[type="submit"]');
   err.textContent = '';
-  const res = login(email, pass);
+  btn.disabled = true;
+  btn.textContent = 'Giriş yapılıyor...';
+
+  const res = await signIn(email, pass);
+  btn.disabled = false;
+  btn.textContent = 'Giriş Yap';
+
   if (!res.ok) { err.textContent = res.error; return; }
   const redir = sessionStorage.getItem('framely:authRedirect') || 'index.html';
   sessionStorage.removeItem('framely:authRedirect');
   window.location.href = redir;
 });
 
+// ── KAYIT FORMU ───────────────────────────────────────────────────────────────
 registerForm.addEventListener('submit', async e => {
   e.preventDefault();
   const name  = document.getElementById('regName').value.trim();
@@ -233,33 +244,22 @@ registerForm.addEventListener('submit', async e => {
   const btn   = document.getElementById('regSubmitBtn');
   err.textContent = '';
 
-  if (!name)            { err.textContent = 'Ad Soyad zorunludur.'; return; }
-  if (pass.length < 6)  { err.textContent = 'Şifre en az 6 karakter olmalıdır.'; return; }
-  if (pass !== pass2)   { err.textContent = 'Şifreler eşleşmiyor.'; return; }
+  if (!name)           { err.textContent = 'Ad Soyad zorunludur.'; return; }
+  if (pass.length < 6) { err.textContent = 'Şifre en az 6 karakter olmalıdır.'; return; }
+  if (pass !== pass2)  { err.textContent = 'Şifreler eşleşmiyor.'; return; }
 
-  const res = registerPending(name, email, pass);
-  if (!res.ok) { err.textContent = res.error; return; }
-
-  btn.textContent = 'Gönderiliyor...';
+  btn.textContent = 'Kaydediliyor...';
   btn.disabled = true;
 
-  if (isEmailConfigured()) {
-    try {
-      await sendVerificationEmail(name, email, res.token);
-    } catch (ex) {
-      console.error('EmailJS hata:', ex);
-      err.textContent = 'Doğrulama e-postası gönderilemedi. Lütfen tekrar deneyin.';
-      btn.textContent = 'Kayıt Ol';
-      btn.disabled = false;
-      return;
-    }
-  }
-
+  const res = await signUp(name, email, pass);
   btn.textContent = 'Kayıt Ol';
   btn.disabled = false;
+
+  if (!res.ok) { err.textContent = res.error; return; }
   showVerifyPanel(email);
 });
 
+// ── TEKRAR GÖNDER ─────────────────────────────────────────────────────────────
 document.getElementById('resendBtn').addEventListener('click', async () => {
   const resendErr = document.getElementById('resendError');
   const resendOk  = document.getElementById('resendSuccess');
@@ -267,29 +267,21 @@ document.getElementById('resendBtn').addEventListener('click', async () => {
   resendErr.textContent = '';
   resendOk.classList.add('hidden');
 
-  const res = resendVerification(pendingEmail);
-  if (!res.ok) { resendErr.textContent = res.error; return; }
-
   btn.textContent = 'Gönderiliyor...';
   btn.disabled = true;
 
-  if (isEmailConfigured()) {
-    try {
-      await sendVerificationEmail(res.name, pendingEmail, res.token);
-    } catch (ex) {
-      resendErr.textContent = 'E-posta gönderilemedi. Lütfen tekrar deneyin.';
-      btn.textContent = 'Tekrar gönder';
-      btn.disabled = false;
-      return;
-    }
+  const res = await resendSignupEmail(pendingEmail);
+
+  if (!res.ok) {
+    resendErr.textContent = res.error;
+    btn.textContent = 'Tekrar gönder';
+    btn.disabled = false;
+    return;
   }
 
-  btn.textContent = 'Tekrar gönder';
-  btn.disabled = false;
   resendOk.classList.remove('hidden');
 
   let countdown = 60;
-  btn.disabled = true;
   btn.textContent = `Tekrar gönder (${countdown}s)`;
   const iv = setInterval(() => {
     countdown--;
@@ -298,6 +290,7 @@ document.getElementById('resendBtn').addEventListener('click', async () => {
   }, 1000);
 });
 
+// ── ŞİFRE SIFIRLAMA ───────────────────────────────────────────────────────────
 document.getElementById('forgotForm').addEventListener('submit', async e => {
   e.preventDefault();
   const email = document.getElementById('forgotEmail').value.trim();
@@ -308,30 +301,19 @@ document.getElementById('forgotForm').addEventListener('submit', async e => {
   err.textContent = '';
   ok.classList.add('hidden');
 
-  const res = requestPasswordReset(email);
-  if (!res.ok) { err.textContent = res.error; return; }
-
   btn.textContent = 'Gönderiliyor...';
   btn.disabled = true;
 
-  if (isResetConfigured()) {
-    try {
-      await sendPasswordResetEmail(res.name, email, res.token);
-    } catch (ex) {
-      console.error('EmailJS reset hata:', ex);
-      err.textContent = 'E-posta gönderilemedi. Lütfen tekrar deneyin.';
-      btn.textContent = 'Sıfırlama Bağlantısı Gönder';
-      btn.disabled = false;
-      return;
-    }
-  }
-
+  const res = await sendPasswordReset(email);
   btn.textContent = 'Sıfırlama Bağlantısı Gönder';
   btn.disabled = false;
+
+  if (!res.ok) { err.textContent = res.error; return; }
   form.classList.add('hidden');
   ok.classList.remove('hidden');
 });
 
+// ── URL PARAMETRESI ───────────────────────────────────────────────────────────
 const urlTab = new URLSearchParams(window.location.search).get('tab');
 if (urlTab === 'register') switchTab('register');
 </script>

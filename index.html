@@ -12,9 +12,9 @@
 <title>Framely — Kişisel Posterler</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/variables.css?v=5">
-<link rel="stylesheet" href="css/landing.css?v=5">
-<link rel="stylesheet" href="css/usermenu.css?v=5">
+<link rel="stylesheet" href="css/variables.css?v=6">
+<link rel="stylesheet" href="css/landing.css?v=6">
+<link rel="stylesheet" href="css/usermenu.css?v=6">
 </head>
 <body>
 
@@ -249,9 +249,9 @@
 </footer>
 
 <script type="module">
-import { renderSiteNav } from './js/header.js?v=5';
-document.addEventListener('DOMContentLoaded', () => {
-  renderSiteNav(document.getElementById('mainNav'), 'home');
+import { renderSiteNav } from './js/header.js?v=6';
+document.addEventListener('DOMContentLoaded', async () => {
+  await renderSiteNav(document.getElementById('mainNav'), 'home');
 });
 </script>
 </body>

@@ -1,4 +1,4 @@
-import { jsPDF } from 'https://esm.sh/jspdf@2';
+﻿import { jsPDF } from 'https://esm.sh/jspdf@2';
 import { supabase, DESIGN_BUCKET } from './supabase.js';
 
 /**

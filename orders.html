@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
@@ -7,10 +7,10 @@
 <title>Framely — Siparişlerim</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/variables.css?v=5">
-<link rel="stylesheet" href="css/landing.css?v=5">
-<link rel="stylesheet" href="css/orders.css?v=5">
-<link rel="stylesheet" href="css/usermenu.css?v=5">
+<link rel="stylesheet" href="css/variables.css?v=6">
+<link rel="stylesheet" href="css/landing.css?v=6">
+<link rel="stylesheet" href="css/orders.css?v=6">
+<link rel="stylesheet" href="css/usermenu.css?v=6">
 </head>
 <body>
 
@@ -45,22 +45,29 @@
 </main>
 
 <script type="module">
-import { getCurrentUser, requireAuth, logout } from './js/auth.js?v=5';
-import { getOrders } from './js/cart.js?v=5';
-import { renderSiteNav } from './js/header.js?v=5';
+import { getCurrentUser, requireAuth } from './js/auth.js?v=6';
+import { getOrders } from './js/cart.js?v=6';
+import { renderSiteNav } from './js/header.js?v=6';
 
-if (!requireAuth('orders.html')) { throw new Error('auth'); }
-const user = getCurrentUser();
-document.getElementById('ordersUserInfo').textContent = user.name + ' · ' + user.email;
+// ── AUTH ──────────────────────────────────────────────────────────────────────
+const authed = await requireAuth('orders.html');
+if (!authed) throw new Error('auth');
 
-document.addEventListener('DOMContentLoaded', () => {
-  renderSiteNav(document.getElementById('mainNav'), 'orders');
-});
+const user = await getCurrentUser();
+document.getElementById('ordersUserInfo').textContent = (user?.name || '') + ' · ' + (user?.email || '');
 
-const allOrders = getOrders().filter(o => o.userId === user.id);
+await renderSiteNav(document.getElementById('mainNav'), 'orders');
 
-const list = document.getElementById('ordersList');
+// ── SİPARİŞLERİ YÜKLE ────────────────────────────────────────────────────────
+const list  = document.getElementById('ordersList');
 const empty = document.getElementById('ordersEmpty');
+
+list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)">Siparişler yükleniyor...</div>';
+
+// Supabase RLS sayesinde sadece kullanıcının siparişleri gelir
+const allOrders = await getOrders();
+
+list.innerHTML = '';
 
 if (allOrders.length === 0) {
   empty.classList.remove('hidden');
@@ -71,13 +78,19 @@ if (allOrders.length === 0) {
 
     const statusColor = {
       'Hazırlanıyor': '#e67e22',
-      'Kargoda': '#2980b9',
-      'Teslim Edildi': '#27ae60',
+      'Baskıda':      '#9b59b6',
+      'Kargoda':      '#2980b9',
+      'Teslim Edildi':'#27ae60',
+      'İptal':        '#e74c3c',
     }[order.status] || '#888';
 
     const date = new Date(order.createdAt).toLocaleDateString('tr-TR', {
       day: 'numeric', month: 'long', year: 'numeric'
     });
+
+    const addr = order.address || {};
+    const addrLine = [addr.line || addr.address, addr.district, addr.city]
+      .filter(Boolean).join(', ') || '—';
 
     card.innerHTML = `
       <div class="order-header">
@@ -90,23 +103,21 @@ if (allOrders.length === 0) {
       <div class="order-body">
         <div class="order-poster-icon">${order.icon || '🖼️'}</div>
         <div class="order-info">
-          <div class="order-name">${order.presetName}</div>
-          <div class="order-desc">${order.presetDesc}</div>
+          <div class="order-name">${order.presetName || '—'}</div>
+          <div class="order-desc">${order.presetDesc || '—'}</div>
           <div class="order-details">
             <span>${order.quantity} adet</span>
             <span>·</span>
-            <span>****${order.cardLast4} ile ödendi</span>
+            <span>${order.cardLast4 ? '****' + order.cardLast4 + ' ile ödendi' : '—'}</span>
           </div>
         </div>
         <div class="order-total">
           <div class="order-total-label">Toplam</div>
-          <div class="order-total-val">${order.total.toLocaleString('tr-TR')} TL</div>
+          <div class="order-total-val">${(order.total || 0).toLocaleString('tr-TR')} TL</div>
         </div>
       </div>
       <div class="order-footer">
-        <div class="order-addr">
-          📍 ${order.address.line}, ${order.address.district}/${order.address.city}
-        </div>
+        <div class="order-addr">📍 ${addrLine}</div>
         <a href="templates.html" class="order-reorder">Tekrar Sipariş Ver</a>
       </div>
     `;

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
@@ -7,10 +7,10 @@
 <title>Framely — Sipariş & Ödeme</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/variables.css?v=5">
-<link rel="stylesheet" href="css/landing.css?v=5">
-<link rel="stylesheet" href="css/checkout.css?v=5">
-<link rel="stylesheet" href="css/usermenu.css?v=5">
+<link rel="stylesheet" href="css/variables.css?v=6">
+<link rel="stylesheet" href="css/landing.css?v=6">
+<link rel="stylesheet" href="css/checkout.css?v=6">
+<link rel="stylesheet" href="css/usermenu.css?v=6">
 </head>
 <body>
 
@@ -229,17 +229,23 @@
 </div>
 
 <script type="module">
-import { getCurrentUser, requireAuth } from './js/auth.js?v=5';
-import { getCart, createOrder } from './js/cart.js?v=5';
+import { getCurrentUser, requireAuth } from './js/auth.js?v=6';
+import { getCart, createOrder } from './js/cart.js?v=6';
+import { renderSiteNav } from './js/header.js?v=6';
 
-if (!requireAuth('checkout.html')) { throw new Error('auth'); }
+// ── AUTH KONTROLÜ ─────────────────────────────────────────────────────────────
+const authed = await requireAuth('checkout.html');
+if (!authed) throw new Error('auth');
 
-const user = getCurrentUser();
+const user = await getCurrentUser();
 const cart = getCart();
 
 if (!cart) {
   window.location.href = 'templates.html';
 }
+
+// Nav render
+await renderSiteNav(document.getElementById('mainNav'));
 
 let quantity = cart ? (cart.quantity || 1) : 1;
 let addressData = null;
@@ -318,7 +324,14 @@ document.getElementById('addressForm').addEventListener('submit', e => {
   if (!firstName || !lastName || !phone || !line || !district || !city) {
     err.textContent = 'Lütfen tüm zorunlu alanları doldurun.'; return;
   }
-  addressData = { firstName, lastName, phone, line, district, city, postal: document.getElementById('adPostal').value.trim() };
+  addressData = {
+    firstName, lastName, phone,
+    address: line,   // cart.js rowToOrder: address.address
+    line,            // legacy uyumluluk
+    district, city,
+    zip: document.getElementById('adPostal').value.trim(),
+    postal: document.getElementById('adPostal').value.trim(),
+  };
   setStep(2);
   updateSummaryUI();
 });
@@ -327,10 +340,6 @@ const cardInput = document.getElementById('payCard');
 cardInput.addEventListener('input', function() {
   let v = this.value.replace(/\D/g, '').substring(0, 16);
   this.value = v.replace(/(.{4})/g, '$1 ').trim();
-  const icon = document.getElementById('cardIcon');
-  if (v.startsWith('4')) icon.textContent = '💳';
-  else if (v.startsWith('5')) icon.textContent = '💳';
-  else icon.textContent = '💳';
 });
 
 document.getElementById('payExpiry').addEventListener('input', function() {
@@ -362,23 +371,22 @@ document.getElementById('paymentForm').addEventListener('submit', async e => {
 
   await new Promise(r => setTimeout(r, 1800));
 
-  cart.quantity = quantity;
-
-  const order = createOrder({
-    user,
-    cart,
-    address: addressData,
-    payment: { cardNumber: card },
-  });
-
-  document.getElementById('successOrderId').textContent = order.id;
-  setStep(3);
-});
-</script>
-<script type="module">
-import { renderSiteNav } from './js/header.js?v=5';
-document.addEventListener('DOMContentLoaded', () => {
-  renderSiteNav(document.getElementById('mainNav'));
+  try {
+    cart.quantity = quantity;
+    const order = await createOrder({
+      user,
+      cart,
+      address: addressData,
+      payment: { cardNumber: card },
+    });
+    document.getElementById('successOrderId').textContent = order.id;
+    setStep(3);
+  } catch (ex) {
+    err.textContent = ex.message || 'Sipariş oluşturulamadı. Lütfen tekrar deneyin.';
+    btn.disabled = false;
+    document.getElementById('btnPayText').textContent = 'Ödemeyi Tamamla';
+    btn.style.opacity = '1';
+  }
 });
 </script>
 </body>
