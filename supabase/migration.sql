@@ -110,6 +110,10 @@ drop policy if exists profiles_admin_update on public.profiles;
 create policy profiles_admin_update on public.profiles
   for update using (public.is_admin()) with check (public.is_admin());
 
+drop policy if exists profiles_insert_own on public.profiles;
+create policy profiles_insert_own on public.profiles
+  for insert with check (id = auth.uid());
+
 -- ── MEVCUT VERİTABANINA SÜTUN EKLE (zaten kuruluysa çalıştırın) ──────────────
 alter table public.profiles add column if not exists phone    text;
 alter table public.profiles add column if not exists address  text;

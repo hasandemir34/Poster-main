@@ -1,262 +1,357 @@
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" type="image/png" href="favicon.png">
-<title>Framely — Profil Bilgileri</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/variables.css?v=6">
-<link rel="stylesheet" href="css/landing.css?v=6">
-<link rel="stylesheet" href="css/usermenu.css?v=6">
-<link rel="stylesheet" href="css/profile.css?v=6">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <title>Framely — Profil Bilgileri</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/variables.css?v=6">
+  <link rel="stylesheet" href="css/landing.css?v=6">
+  <link rel="stylesheet" href="css/usermenu.css?v=6">
+  <link rel="stylesheet" href="css/profile.css?v=6">
 </head>
+
 <body>
 
-<header>
-  <div class="header-inner">
-    <a href="index.html" class="logo">
-      <div class="logo-mark">🖼</div>
-      <span class="logo-text">Frame<span>ly</span></span>
-    </a>
-    <nav id="mainNav"></nav>
+  <header>
+    <div class="header-inner">
+      <a href="index.html" class="logo">
+        <div class="logo-mark">🖼</div>
+        <span class="logo-text">Frame<span>ly</span></span>
+      </a>
+      <nav id="mainNav"></nav>
+    </div>
+  </header>
+
+  <main class="profile-page">
+    <div class="profile-header">
+      <div class="profile-label">Hesabım</div>
+      <h1 class="profile-title">Profil Bilgileri</h1>
+      <p class="profile-sub">Kişisel bilgilerinizi ve teslimat adresinizi güncelleyin.</p>
+    </div>
+
+    <div class="account-tabs">
+      <a href="orders.html" class="account-tab">📦 Siparişlerim</a>
+      <a href="profile.html" class="account-tab active">👤 Profil Bilgileri</a>
+    </div>
+
+    <div class="profile-card">
+      <form id="profileForm" novalidate>
+
+        <!-- Kişisel Bilgiler -->
+        <div class="profile-section-title">
+          <span>👤</span> Kişisel Bilgiler
+        </div>
+
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label">Ad</label>
+            <input class="field-input" type="text" id="profFirstName" placeholder="Adınız" required>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Soyad</label>
+            <input class="field-input" type="text" id="profLastName" placeholder="Soyadınız" required>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label">E-posta Adresi (Değiştirilemez)</label>
+            <input class="field-input" type="email" id="profEmail" disabled>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Telefon Numarası</label>
+            <input class="field-input" type="tel" id="profPhone" placeholder="05XX XXX XX XX">
+          </div>
+        </div>
+
+        <div class="profile-divider"></div>
+
+        <!-- Teslimat Adresi -->
+        <div class="profile-section-title">
+          <span>📍</span> Varsayılan Teslimat Adresi
+        </div>
+
+        <div class="floating-group">
+          <input class="field-input" type="text" id="profAddress" placeholder=" ">
+          <label class="floating-label">Adres Satırı</label>
+        </div>
+
+        <div class="field-row">
+          <div class="floating-group combobox-wrapper" id="cityWrapper">
+            <input class="field-input" type="text" id="profCity" placeholder=" " autocomplete="off">
+            <label class="floating-label">İl</label>
+            <div class="combobox-list" id="cityList"></div>
+          </div>
+          <div class="floating-group">
+            <input class="field-input" type="text" id="profDistrict" placeholder=" ">
+            <label class="floating-label">İlçe</label>
+          </div>
+        </div>
+
+        <div class="floating-group" style="width: 50%;">
+          <input class="field-input" type="text" id="profZip" placeholder=" " maxlength="5">
+          <label class="floating-label">Posta Kodu</label>
+        </div>
+
+        <div style="margin-top: 10px; display: flex; justify-content: flex-end;">
+          <button class="btn-save-profile" type="submit" id="btnSaveProfile">
+            <span>💾 Profilimi Kaydet</span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </main>
+
+  <!-- Toast -->
+  <div id="toast" class="toast">
+    <span id="toastIcon">✅</span>
+    <span id="toastMsg">Profiliniz başarıyla kaydedildi.</span>
   </div>
-</header>
 
-<main class="profile-page">
-  <div class="profile-header">
-    <div class="profile-label">Hesabım</div>
-    <h1 class="profile-title">Profil Bilgileri</h1>
-    <p class="profile-sub">Kişisel bilgilerinizi ve teslimat adresinizi güncelleyin.</p>
-  </div>
+  <script type="module">
+    import { supabase } from './js/supabase.js';
+    import { getCurrentUser, requireAuth } from './js/auth.js?v=6';
+    import { renderSiteNav } from './js/header.js?v=6';
 
-  <div class="account-tabs">
-    <a href="orders.html" class="account-tab">📦 Siparişlerim</a>
-    <a href="profile.html" class="account-tab active">👤 Profil Bilgileri</a>
-  </div>
+    // ── AUTH KONTROLÜ ─────────────────────────────────────────────────────────────
+    const authed = await requireAuth('profile.html');
+    if (!authed) throw new Error('auth');
 
-  <div class="profile-card">
-    <form id="profileForm" novalidate>
-      
-      <!-- Kişisel Bilgiler -->
-      <div class="profile-section-title">
-        <span>👤</span> Kişisel Bilgiler
-      </div>
-
-      <div class="field-row">
-        <div class="field-group">
-          <label class="field-label">Ad</label>
-          <input class="field-input" type="text" id="profFirstName" placeholder="Adınız" required>
-        </div>
-        <div class="field-group">
-          <label class="field-label">Soyad</label>
-          <input class="field-input" type="text" id="profLastName" placeholder="Soyadınız" required>
-        </div>
-      </div>
-
-      <div class="field-row">
-        <div class="field-group">
-          <label class="field-label">E-posta Adresi (Değiştirilemez)</label>
-          <input class="field-input" type="email" id="profEmail" disabled>
-        </div>
-        <div class="field-group">
-          <label class="field-label">Telefon Numarası</label>
-          <input class="field-input" type="tel" id="profPhone" placeholder="05XX XXX XX XX">
-        </div>
-      </div>
-
-      <div class="profile-divider"></div>
-
-      <!-- Teslimat Adresi -->
-      <div class="profile-section-title">
-        <span>📍</span> Varsayılan Teslimat Adresi
-      </div>
-
-      <div class="field-group">
-        <label class="field-label">Adres Satırı</label>
-        <input class="field-input" type="text" id="profAddress" placeholder="Mahalle, cadde, sokak, bina no, daire">
-      </div>
-
-      <div class="field-row">
-        <div class="field-group">
-          <label class="field-label">İlçe</label>
-          <input class="field-input" type="text" id="profDistrict" placeholder="İlçe">
-        </div>
-        <div class="field-group">
-          <label class="field-label">İl</label>
-          <input class="field-input" type="text" id="profCity" placeholder="Şehir">
-        </div>
-        <div class="field-group">
-          <label class="field-label">Posta Kodu</label>
-          <input class="field-input" type="text" id="profZip" placeholder="34000" maxlength="5">
-        </div>
-      </div>
-
-      <div style="margin-top: 10px; display: flex; justify-content: flex-end;">
-        <button class="btn-save-profile" type="submit" id="btnSaveProfile">
-          <span>💾 Profilimi Kaydet</span>
-        </button>
-      </div>
-
-    </form>
-  </div>
-</main>
-
-<!-- Toast -->
-<div id="toast" class="toast">
-  <span id="toastIcon">✅</span>
-  <span id="toastMsg">Profiliniz başarıyla kaydedildi.</span>
-</div>
-
-<script type="module">
-import { supabase } from './js/supabase.js';
-import { getCurrentUser, requireAuth } from './js/auth.js?v=6';
-import { renderSiteNav } from './js/header.js?v=6';
-
-// ── AUTH KONTROLÜ ─────────────────────────────────────────────────────────────
-const authed = await requireAuth('profile.html');
-if (!authed) throw new Error('auth');
-
-const user = await getCurrentUser();
-await renderSiteNav(document.getElementById('mainNav'));
-
-// Toast message handler
-function showToast(msg, isError = false) {
-  const t = document.getElementById('toast');
-  const tMsg = document.getElementById('toastMsg');
-  const tIcon = document.getElementById('toastIcon');
-  
-  tMsg.textContent = msg;
-  tIcon.textContent = isError ? '❌' : '✅';
-  
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3000);
-}
-
-// ── BİLGİLERİ DOLDUR ─────────────────────────────────────────────────────────
-async function loadProfile() {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return;
-  
-  const uid = session.user.id;
-  document.getElementById('profEmail').value = session.user.email || '';
-  
-  // Profile tablosundan diğer alanları çek
-  const { data: profile, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', uid)
-    .single();
-    
-  if (error && error.code !== 'PGRST116') { // PGRST116 is code for no rows found
-    console.error('Profil yükleme hatası:', error);
-    showToast('Profil bilgileri yüklenirken hata oluştu.', true);
-    return;
-  }
-  
-  if (profile) {
-    // Ad-soyadı ayır
-    const fullName = profile.name || '';
-    const parts = fullName.trim().split(/\s+/);
-    if (parts.length > 1) {
-      document.getElementById('profFirstName').value = parts[0];
-      document.getElementById('profLastName').value = parts.slice(1).join(' ');
-    } else {
-      document.getElementById('profFirstName').value = fullName;
-      document.getElementById('profLastName').value = '';
-    }
-    
-    document.getElementById('profPhone').value = profile.phone || '';
-    document.getElementById('profAddress').value = profile.address || '';
-    document.getElementById('profDistrict').value = profile.district || '';
-    document.getElementById('profCity').value = profile.city || '';
-    document.getElementById('profZip').value = profile.zip || '';
-  } else {
-    // Profil tablosunda henüz satır yoksa auth metadata'sından çek
-    const nameMeta = session.user.user_metadata?.name || '';
-    const parts = nameMeta.trim().split(/\s+/);
-    if (parts.length > 1) {
-      document.getElementById('profFirstName').value = parts[0];
-      document.getElementById('profLastName').value = parts.slice(1).join(' ');
-    } else {
-      document.getElementById('profFirstName').value = nameMeta;
-      document.getElementById('profLastName').value = '';
-    }
-  }
-}
-
-await loadProfile();
-
-// ── PROFİLİ KAYDET ──────────────────────────────────────────────────────────
-document.getElementById('profileForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  
-  const firstName = document.getElementById('profFirstName').value.trim();
-  const lastName = document.getElementById('profLastName').value.trim();
-  const phone = document.getElementById('profPhone').value.trim();
-  const address = document.getElementById('profAddress').value.trim();
-  const district = document.getElementById('profDistrict').value.trim();
-  const city = document.getElementById('profCity').value.trim();
-  const zip = document.getElementById('profZip').value.trim();
-  
-  if (!firstName) {
-    showToast('Lütfen adınızı girin.', true);
-    return;
-  }
-  
-  const btn = document.getElementById('btnSaveProfile');
-  btn.disabled = true;
-  btn.textContent = 'Kaydediliyor...';
-  
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) {
-    showToast('Oturum bulunamadı. Lütfen tekrar giriş yapın.', true);
-    btn.disabled = false;
-    btn.textContent = '💾 Profilimi Kaydet';
-    return;
-  }
-  
-  const uid = session.user.id;
-  const fullName = [firstName, lastName].filter(Boolean).join(' ');
-  
-  try {
-    // 1. profiles tablosunu güncelle (veya yoksa ekle)
-    const { error: dbError } = await supabase
-      .from('profiles')
-      .upsert({
-        id: uid,
-        name: fullName,
-        email: session.user.email,
-        phone,
-        address,
-        district,
-        city,
-        zip
-      });
-      
-    if (dbError) throw dbError;
-    
-    // 2. Auth metadata'sını da güncelle ki header hemen güncellensin
-    const { error: authError } = await supabase.auth.updateUser({
-      data: { name: fullName }
-    });
-    
-    if (authError) throw authError;
-    
-    showToast('Profiliniz başarıyla güncellendi ✓');
-    
-    // Header'ı yeniden render et
+    const user = await getCurrentUser();
     await renderSiteNav(document.getElementById('mainNav'));
-    
-  } catch (err) {
-    console.error('Kayıt hatası:', err);
-    showToast('Profil kaydedilirken bir hata oluştu: ' + (err.message || err), true);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = '💾 Profilimi Kaydet';
-  }
-});
-</script>
+
+    // Toast message handler
+    function showToast(msg, isError = false) {
+      const t = document.getElementById('toast');
+      const tMsg = document.getElementById('toastMsg');
+      const tIcon = document.getElementById('toastIcon');
+
+      tMsg.textContent = msg;
+      tIcon.textContent = isError ? '❌' : '✅';
+
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    // ── BİLGİLERİ DOLDUR ─────────────────────────────────────────────────────────
+    async function loadProfile() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const uid = session.user.id;
+      document.getElementById('profEmail').value = session.user.email || '';
+
+      // Profile tablosundan diğer alanları çek
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', uid)
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 is code for no rows found
+        console.error('Profil yükleme hatası:', error);
+        showToast('Profil bilgileri yüklenirken hata oluştu.', true);
+        return;
+      }
+
+      if (profile) {
+        // Ad-soyadı ayır
+        const fullName = profile.name || '';
+        const parts = fullName.trim().split(/\s+/);
+        if (parts.length > 1) {
+          document.getElementById('profFirstName').value = parts[0];
+          document.getElementById('profLastName').value = parts.slice(1).join(' ');
+        } else {
+          document.getElementById('profFirstName').value = fullName;
+          document.getElementById('profLastName').value = '';
+        }
+
+        document.getElementById('profPhone').value = profile.phone || '';
+        document.getElementById('profAddress').value = profile.address || '';
+        document.getElementById('profDistrict').value = profile.district || '';
+        document.getElementById('profCity').value = profile.city || '';
+        document.getElementById('profZip').value = profile.zip || '';
+      } else {
+        // Profil tablosunda henüz satır yoksa auth metadata'sından çek
+        const nameMeta = session.user.user_metadata?.name || '';
+        const parts = nameMeta.trim().split(/\s+/);
+        if (parts.length > 1) {
+          document.getElementById('profFirstName').value = parts[0];
+          document.getElementById('profLastName').value = parts.slice(1).join(' ');
+        } else {
+          document.getElementById('profFirstName').value = nameMeta;
+          document.getElementById('profLastName').value = '';
+        }
+      }
+    }
+
+    await loadProfile();
+
+    // ── İL / İLÇE LOGIC ─────────────────────────────────────────────────────────
+    let turkeyDataCache = null;
+
+    async function fetchTurkeyData() {
+      if (turkeyDataCache) return turkeyDataCache;
+      try {
+        const res = await fetch('https://turkiyeapi.dev/api/v1/provinces');
+        const json = await res.json();
+        let dataMap = {};
+        json.data.forEach(p => {
+          dataMap[p.name] = p.districts.map(d => d.name);
+        });
+        turkeyDataCache = dataMap;
+        return dataMap;
+      } catch (e) {
+        console.error('İl verileri çekilemedi:', e);
+        return null;
+      }
+    }
+
+    function setupCombobox(inputId, listId, wrapperId, getOptionsCallback, onSelectCallback) {
+      const input = document.getElementById(inputId);
+      const list = document.getElementById(listId);
+      const wrapper = document.getElementById(wrapperId);
+
+      document.addEventListener('click', (e) => {
+        if (!wrapper.contains(e.target)) {
+          list.classList.remove('active');
+        }
+      });
+
+      input.addEventListener('focus', async () => {
+        if (input.disabled) return;
+        await renderOptions(input.value);
+        list.classList.add('active');
+      });
+
+      input.addEventListener('input', async (e) => {
+        await renderOptions(e.target.value);
+        list.classList.add('active');
+
+        // Auto reset district if city input is manually typed/changed and not matching
+        if (inputId === 'profCity' && onSelectCallback) {
+          onSelectCallback(e.target.value, false);
+        }
+      });
+
+      async function renderOptions(filter) {
+        const options = await getOptionsCallback();
+        if (!options) return;
+
+        list.innerHTML = '';
+        const filtered = options.filter(o => o.toLocaleLowerCase('tr-TR').includes(filter.toLocaleLowerCase('tr-TR')));
+
+        if (filtered.length === 0) {
+          const empty = document.createElement('div');
+          empty.className = 'combobox-item empty-msg';
+          empty.textContent = 'Sonuç bulunamadı';
+          list.appendChild(empty);
+          return;
+        }
+
+        filtered.forEach(opt => {
+          const div = document.createElement('div');
+          div.className = 'combobox-item';
+          div.textContent = opt;
+          div.onclick = () => {
+            input.value = opt;
+            list.classList.remove('active');
+            if (onSelectCallback) onSelectCallback(opt, true);
+          };
+          list.appendChild(div);
+        });
+      }
+    }
+
+    // Prepare logic
+    fetchTurkeyData().then(data => {
+      if (!data) return;
+      const cityInput = document.getElementById('profCity');
+
+      const topCities = ["İstanbul", "Ankara", "İzmir"];
+      let cities = Object.keys(data);
+      cities = cities.filter(c => !topCities.includes(c)).sort((a, b) => a.localeCompare(b, 'tr-TR'));
+      const sortedCities = [...topCities, ...cities];
+
+      setupCombobox('profCity', 'cityList', 'cityWrapper',
+        () => sortedCities
+      );
+    });
+    // ── PROFİLİ KAYDET ──────────────────────────────────────────────────────────
+    document.getElementById('profileForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const firstName = document.getElementById('profFirstName').value.trim();
+      const lastName = document.getElementById('profLastName').value.trim();
+      const phone = document.getElementById('profPhone').value.trim();
+      const address = document.getElementById('profAddress').value.trim();
+      const district = document.getElementById('profDistrict').value.trim();
+      const city = document.getElementById('profCity').value.trim();
+      const zip = document.getElementById('profZip').value.trim();
+
+      if (!firstName) {
+        showToast('Lütfen adınızı girin.', true);
+        return;
+      }
+
+      const btn = document.getElementById('btnSaveProfile');
+      btn.disabled = true;
+      btn.textContent = 'Kaydediliyor...';
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        showToast('Oturum bulunamadı. Lütfen tekrar giriş yapın.', true);
+        btn.disabled = false;
+        btn.textContent = '💾 Profilimi Kaydet';
+        return;
+      }
+
+      const uid = session.user.id;
+      const fullName = [firstName, lastName].filter(Boolean).join(' ');
+
+      try {
+        // 1. profiles tablosunu güncelle (veya yoksa ekle)
+        const { error: dbError } = await supabase
+          .from('profiles')
+          .upsert({
+            id: uid,
+            name: fullName,
+            email: session.user.email,
+            phone,
+            address,
+            district,
+            city,
+            zip
+          });
+
+        if (dbError) throw dbError;
+
+        // 2. Auth metadata'sını da güncelle ki header hemen güncellensin
+        const { error: authError } = await supabase.auth.updateUser({
+          data: { name: fullName }
+        });
+
+        if (authError) throw authError;
+
+        showToast('Profiliniz başarıyla güncellendi ✓');
+
+        // Header'ı yeniden render et
+        await renderSiteNav(document.getElementById('mainNav'));
+
+      } catch (err) {
+        console.error('Kayıt hatası:', err);
+        showToast('Profil kaydedilirken bir hata oluştu: ' + (err.message || err), true);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '💾 Profilimi Kaydet';
+      }
+    });
+  </script>
 </body>
+
 </html>
