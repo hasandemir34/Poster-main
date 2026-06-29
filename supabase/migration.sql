@@ -8,6 +8,12 @@ create table if not exists public.profiles (
   id         uuid primary key references auth.users(id) on delete cascade,
   name       text,
   email      text,
+  phone      text,
+  address    text,
+  district   text,
+  city       text,
+  zip        text,
+  notes      text,
   is_admin   boolean not null default false,
   created_at timestamptz not null default now()
 );
@@ -99,6 +105,19 @@ create policy profiles_select_own_or_admin on public.profiles
 drop policy if exists profiles_update_own on public.profiles;
 create policy profiles_update_own on public.profiles
   for update using (id = auth.uid());
+
+drop policy if exists profiles_admin_update on public.profiles;
+create policy profiles_admin_update on public.profiles
+  for update using (public.is_admin()) with check (public.is_admin());
+
+-- ── MEVCUT VERİTABANINA SÜTUN EKLE (zaten kuruluysa çalıştırın) ──────────────
+alter table public.profiles add column if not exists phone    text;
+alter table public.profiles add column if not exists address  text;
+alter table public.profiles add column if not exists district text;
+alter table public.profiles add column if not exists city     text;
+alter table public.profiles add column if not exists zip      text;
+alter table public.profiles add column if not exists notes    text;
+
 
 -- products
 drop policy if exists products_public_read on public.products;

@@ -280,12 +280,102 @@
   </main>
 </div>
 
+<!-- ── CUSTOMER PROFILE MODAL ────────────────────────────────── -->
+<div id="customerModal" class="modal-overlay">
+  <div class="modal customer-modal">
+    <div class="modal-header">
+      <div class="modal-title">Müşteri Profili</div>
+      <button class="modal-close" data-close-modal="customerModal">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Hero Banner -->
+      <div class="cm-hero">
+        <div class="cm-avatar" id="cmAvatar">U</div>
+        <div class="cm-hero-info">
+          <div class="cm-name" id="cmDisplayName">—</div>
+          <div class="cm-email" id="cmDisplayEmail">—</div>
+          <div class="cm-meta">
+            <span class="cm-badge" id="cmOrderCount">0 sipariş</span>
+            <span class="cm-badge accent" id="cmTotalSpent">0 ₺</span>
+            <span class="cm-badge muted" id="cmJoinDate">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Divider -->
+      <div class="cm-divider">
+        <span>Kişisel Bilgiler</span>
+      </div>
+
+      <!-- Form -->
+      <form id="customerForm" novalidate>
+        <input type="hidden" id="cmUserId">
+
+        <div class="cm-form-row">
+          <div class="cm-field">
+            <label class="cm-label">Ad</label>
+            <input class="cm-input" type="text" id="cmFirstName" placeholder="Ad">
+          </div>
+          <div class="cm-field">
+            <label class="cm-label">Soyad</label>
+            <input class="cm-input" type="text" id="cmLastName" placeholder="Soyad">
+          </div>
+        </div>
+
+        <div class="cm-field">
+          <label class="cm-label">📞 Telefon Numarası</label>
+          <input class="cm-input" type="tel" id="cmPhone" placeholder="05XX XXX XX XX">
+        </div>
+
+        <div class="cm-field">
+          <label class="cm-label">📍 Adres Satırı</label>
+          <input class="cm-input" type="text" id="cmAddress" placeholder="Mahalle, cadde, sokak, bina no, daire">
+        </div>
+
+        <div class="cm-form-row">
+          <div class="cm-field">
+            <label class="cm-label">İlçe</label>
+            <input class="cm-input" type="text" id="cmDistrict" placeholder="İlçe">
+          </div>
+          <div class="cm-field">
+            <label class="cm-label">İl</label>
+            <input class="cm-input" type="text" id="cmCity" placeholder="Şehir">
+          </div>
+          <div class="cm-field cm-field-sm">
+            <label class="cm-label">Posta Kodu</label>
+            <input class="cm-input" type="text" id="cmZip" placeholder="34000" maxlength="5">
+          </div>
+        </div>
+
+        <div class="cm-field">
+          <label class="cm-label">📝 Notlar</label>
+          <textarea class="cm-input cm-textarea" id="cmNotes" placeholder="Müşteri hakkında notlarınız..."></textarea>
+        </div>
+
+        <div class="cm-form-error" id="cmError"></div>
+      </form>
+
+      <!-- Son Siparişler -->
+      <div class="cm-divider" id="cmOrdersDivider" style="display:none">
+        <span>Son Siparişler</span>
+      </div>
+      <div id="cmRecentOrders" class="cm-orders-list"></div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-close-modal="customerModal">İptal</button>
+      <button id="btnSaveCustomer" class="btn btn-primary">💾 Kaydet</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── ORDER DETAIL MODAL ────────────────────────────────────── -->
 <div id="orderDetailModal" class="modal-overlay">
   <div class="modal" style="max-width:600px">
     <div class="modal-header">
       <div class="modal-title">Sipariş Detayı</div>
-      <button class="modal-close" onclick="closeModal('orderDetailModal')">✕</button>
+      <button class="modal-close" data-close-modal="orderDetailModal">✕</button>
     </div>
     <div class="modal-body">
       <div style="font-family:monospace;font-size:13px;color:var(--text-muted);margin-bottom:16px" id="orderDetailId"></div>
@@ -332,7 +422,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="downloadOrderPdf()">⬇️ PDF İndir</button>
-      <button class="btn btn-ghost" onclick="closeModal('orderDetailModal')">İptal</button>
+      <button class="btn btn-ghost" data-close-modal="orderDetailModal">İptal</button>
       <button id="btnSaveOrderStatus" class="btn btn-primary">Durumu Kaydet</button>
     </div>
   </div>
@@ -343,7 +433,7 @@
   <div class="modal">
     <div class="modal-header">
       <div id="productModalTitle" class="modal-title">Yeni Ürün Ekle</div>
-      <button class="modal-close" onclick="closeModal('productModal')">✕</button>
+      <button class="modal-close" data-close-modal="productModal">✕</button>
     </div>
     <div class="modal-body">
       <form id="productForm" onsubmit="return false">
@@ -420,7 +510,7 @@
       </form>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('productModal')">İptal</button>
+      <button class="btn btn-ghost" data-close-modal="productModal">İptal</button>
       <button id="btnSaveProduct" class="btn btn-primary">Kaydet</button>
     </div>
   </div>

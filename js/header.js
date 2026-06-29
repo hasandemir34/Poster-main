@@ -1,4 +1,4 @@
-﻿import { getCurrentUser, logout } from './auth.js?v=6';
+import { getCurrentUser, logout } from './auth.js?v=6';
 
 const defaultLinks = [
   { key: 'home', href: 'index.html', text: 'Ana Sayfa' },
@@ -27,6 +27,7 @@ function createUserMenu(user, idSuffix = '') {
       </div>
       <div class="user-dropdown-sep"></div>
       <a href="orders.html" class="ud-link">📦 Siparişlerim</a>
+      <a href="profile.html" class="ud-link">👤 Profil Bilgileri</a>
       <button class="ud-link ud-logout" id="udLogout${idSuffix}">🚪 Çıkış Yap</button>
     </div>
   `;
@@ -114,3 +115,37 @@ export async function renderUserOnly(containerEl) {
     containerEl.appendChild(loginBtn);
   }
 }
+
+// Intercept clicks on links pointing to the current page in the header to scroll smoothly instead of reloading
+document.addEventListener('click', (e) => {
+  const link = e.target.closest('header a');
+  if (!link) return;
+
+  try {
+    const url = new URL(link.href, window.location.origin);
+    const currentUrl = new URL(window.location.href);
+
+    // Normalize paths to check if they point to the home page
+    const isLinkHome = url.pathname === '/' || url.pathname.endsWith('/index.html');
+    const isCurrentHome = currentUrl.pathname === '/' || currentUrl.pathname.endsWith('/index.html');
+
+    if (isCurrentHome && isLinkHome) {
+      e.preventDefault();
+      
+      if (url.hash) {
+        const targetElement = document.querySelector(url.hash);
+        if (targetElement) {
+          targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          history.pushState(null, null, url.hash);
+        }
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        // Update URL to home without reloading
+        history.pushState(null, null, currentUrl.pathname);
+      }
+    }
+  } catch (err) {
+    console.error('Error handling header link click:', err);
+  }
+});
+

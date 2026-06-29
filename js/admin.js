@@ -228,7 +228,7 @@ async function renderOrders() {
   }
 
   tbody.innerHTML = filtered.map(o => `
-    <tr>
+    <tr data-order-id="${escapeHtml(o.id)}">
       <td><strong style="font-family:monospace;font-size:12px">${escapeHtml(o.id)}</strong></td>
       <td>
         <div style="font-weight:600">${escapeHtml(o.user_name || '—')}</div>
@@ -236,21 +236,118 @@ async function renderOrders() {
       </td>
       <td>${escapeHtml(o.preset_name || '—')}</td>
       <td><strong>${Number(o.total || 0).toLocaleString('tr-TR')} ₺</strong></td>
-      <td>${statusBadge(o.status)}</td>
+      <td class="status-cell-${escapeHtml(o.id)}">${statusBadge(o.status)}</td>
       <td style="font-size:12px;color:var(--text-muted)">${formatDate(o.created_at)}</td>
       <td>
         <div class="td-actions">
           <button class="btn btn-ghost btn-sm" onclick="openOrderDetail('${escapeHtml(o.id)}')">Detay</button>
-          <button class="btn btn-ghost btn-sm" onclick="quickStatusCycle('${escapeHtml(o.id)}')">Durum Seç →</button>
+          <button class="btn btn-ghost btn-sm" onclick="showInlineStatusPicker('${escapeHtml(o.id)}', '${escapeHtml(o.status || 'Hazırlanıyor')}')">Durum Seç →</button>
         </div>
       </td>
     </tr>
   `).join('');
 }
 
-function quickStatusCycle(orderId) {
-  openOrderDetail(orderId);
-  showToast('Sipariş durumunu seçin', 'info');
+function showInlineStatusPicker(orderId, currentStatus) {
+  // Daha önce açık bir picker varsa kapat
+  const existing = document.getElementById('inlineStatusPicker');
+  if (existing) existing.remove();
+
+  const statuses = [
+    { value: 'Hazırlanıyor', label: '⏳ Hazırlanıyor' },
+    { value: 'Baskıda',      label: '🖨️ Baskıda' },
+    { value: 'Kargoda',      label: '🚚 Kargoda' },
+    { value: 'Teslim Edildi',label: '✅ Teslim Edildi' },
+    { value: 'İptal',        label: '❌ İptal' },
+  ];
+
+  const row = document.querySelector(`tr[data-order-id="${orderId}"]`);
+  if (!row) return;
+
+  const picker = document.createElement('div');
+  picker.id = 'inlineStatusPicker';
+  picker.style.cssText = `
+    position:fixed;
+    z-index:9999;
+    background:#fff;
+    border:1.5px solid var(--border-mid, #e2e0db);
+    border-radius:10px;
+    box-shadow:0 8px 32px rgba(0,0,0,.14);
+    padding:6px;
+    min-width:200px;
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+  `;
+
+  statuses.forEach(s => {
+    const opt = document.createElement('button');
+    opt.textContent = s.label;
+    opt.style.cssText = `
+      background:${s.value === currentStatus ? 'var(--accent-bg, #fff3f3)' : 'transparent'};
+      color:${s.value === currentStatus ? 'var(--accent, #e84040)' : 'var(--text, #1e1e1e)'};
+      border:none;
+      border-radius:7px;
+      padding:9px 14px;
+      text-align:left;
+      font-size:13px;
+      font-weight:${s.value === currentStatus ? '700' : '500'};
+      cursor:pointer;
+      transition:background .12s;
+      font-family:inherit;
+    `;
+    opt.onmouseenter = () => {
+      if (s.value !== currentStatus) opt.style.background = 'var(--bg, #faf8f5)';
+    };
+    opt.onmouseleave = () => {
+      if (s.value !== currentStatus) opt.style.background = 'transparent';
+    };
+    opt.addEventListener('click', async () => {
+      picker.remove();
+      if (s.value === currentStatus) return;
+      const { error } = await supabase
+        .from('orders')
+        .update({ status: s.value })
+        .eq('id', orderId);
+      if (error) { showToast('Durum güncellenemedi', 'error'); return; }
+      // Sadece o satırdaki badge'i güncelle — tam re-render gerekmiyor
+      const cell = document.querySelector(`.status-cell-${orderId}`);
+      if (cell) cell.innerHTML = statusBadge(s.value);
+      // Buton metnini güncelle (data-order-id satırındaki son td içindeki 2. buton)
+      const btn = row.querySelector('.td-actions button:last-child');
+      if (btn) btn.setAttribute('onclick', `showInlineStatusPicker('${orderId}', '${s.value}')`);
+      showToast('Sipariş durumu güncellendi ✓');
+      if (currentTab === 'dashboard') renderDashboard();
+    });
+    picker.appendChild(opt);
+  });
+
+  // Picker'ı butona yakın konumlandır
+  const triggerBtn = row.querySelector('.td-actions button:last-child');
+  if (triggerBtn) {
+    const rect = triggerBtn.getBoundingClientRect();
+    const viewportH = window.innerHeight;
+    picker.style.left = rect.left + 'px';
+    // Altta yer yoksa yukarı aç
+    if (rect.bottom + 220 > viewportH) {
+      picker.style.bottom = (viewportH - rect.top + 4) + 'px';
+      picker.style.top = 'auto';
+    } else {
+      picker.style.top = (rect.bottom + 4) + 'px';
+    }
+  }
+
+  document.body.appendChild(picker);
+
+  // Dışarıya tıklayınca kapat
+  setTimeout(() => {
+    document.addEventListener('click', function handler(e) {
+      if (!picker.contains(e.target)) {
+        picker.remove();
+        document.removeEventListener('click', handler);
+      }
+    });
+  }, 0);
 }
 
 async function openOrderDetail(orderId) {
@@ -550,8 +647,9 @@ async function renderUsers() {
           <div class="user-info">
             <div class="user-avatar">${initials}</div>
             <div>
-              <div style="font-weight:600">${escapeHtml(u.name || '—')}</div>
-              <div style="font-size:11px;color:var(--text-muted)">${escapeHtml(u.id || '')}</div>
+              <span class="user-name-link" onclick="openCustomerModal('${escapeHtml(u.id)}')"
+                title="Profili düzenle">${escapeHtml(u.name || '—')}</span>
+              <div style="font-size:11px;color:var(--text-muted)">${escapeHtml(u.email || '—')}</div>
             </div>
           </div>
         </td>
@@ -562,6 +660,123 @@ async function renderUsers() {
       </tr>
     `;
   }).join('');
+}
+
+// ── CUSTOMER MODAL ────────────────────────────────────────────────────────────
+let _cmOrders = [];
+
+async function openCustomerModal(userId) {
+  // Kullanıcı profilini çek
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', userId)
+    .single();
+
+  // Tüm siparişlerini çek
+  const { data: orders } = await supabase
+    .from('orders')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(5);
+
+  _cmOrders = orders || [];
+  const u = profile || {};
+  const totalSpent = _cmOrders.reduce((s, o) => s + Number(o.total || 0), 0);
+  const initials = (u.name || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+
+  // Hero
+  document.getElementById('cmAvatar').textContent        = initials;
+  document.getElementById('cmDisplayName').textContent   = u.name || '—';
+  document.getElementById('cmDisplayEmail').textContent  = u.email || '—';
+  document.getElementById('cmOrderCount').textContent    = `${_cmOrders.length} sipariş`;
+  document.getElementById('cmTotalSpent').textContent    = `${totalSpent.toLocaleString('tr-TR')} ₺`;
+  document.getElementById('cmJoinDate').textContent      = formatDate(u.created_at);
+
+  // Form alanları
+  document.getElementById('cmUserId').value    = u.id || '';
+  const parts = (u.name || '').split(' ');
+  document.getElementById('cmFirstName').value = parts[0] || '';
+  document.getElementById('cmLastName').value  = parts.slice(1).join(' ') || '';
+  document.getElementById('cmPhone').value     = u.phone    || '';
+  document.getElementById('cmAddress').value   = u.address  || '';
+  document.getElementById('cmDistrict').value  = u.district || '';
+  document.getElementById('cmCity').value      = u.city     || '';
+  document.getElementById('cmZip').value       = u.zip      || '';
+  document.getElementById('cmNotes').value     = u.notes    || '';
+  document.getElementById('cmError').textContent = '';
+
+  // Son siparişler
+  const divider = document.getElementById('cmOrdersDivider');
+  const ordersEl = document.getElementById('cmRecentOrders');
+  if (_cmOrders.length > 0) {
+    divider.style.display = '';
+    ordersEl.innerHTML = _cmOrders.map(o => {
+      const statusColors = {
+        'Hazırlanıyor': '#FF9500', 'Baskıda': '#007AFF',
+        'Kargoda': '#AF52DE', 'Teslim Edildi': '#34C759', 'İptal': '#e5534b'
+      };
+      const color = statusColors[o.status] || '#888';
+      return `
+        <div class="cm-order-row">
+          <span class="cm-or-id">#${escapeHtml(String(o.id).slice(-8).toUpperCase())}</span>
+          <span class="cm-or-name">${escapeHtml(o.preset_name || o.product_id || '—')}</span>
+          <span class="cm-or-total">${Number(o.total || 0).toLocaleString('tr-TR')} ₺</span>
+          <span class="status-badge" style="background:${color}22;color:${color};font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600">${escapeHtml(o.status || '—')}</span>
+        </div>
+      `;
+    }).join('');
+  } else {
+    divider.style.display = 'none';
+    ordersEl.innerHTML = '';
+  }
+
+  document.getElementById('customerModal').classList.add('open');
+}
+
+async function saveCustomer() {
+  const userId    = document.getElementById('cmUserId').value;
+  const firstName = document.getElementById('cmFirstName').value.trim();
+  const lastName  = document.getElementById('cmLastName').value.trim();
+  const phone     = document.getElementById('cmPhone').value.trim();
+  const address   = document.getElementById('cmAddress').value.trim();
+  const district  = document.getElementById('cmDistrict').value.trim();
+  const city      = document.getElementById('cmCity').value.trim();
+  const zip       = document.getElementById('cmZip').value.trim();
+  const notes     = document.getElementById('cmNotes').value.trim();
+  const errEl     = document.getElementById('cmError');
+  errEl.textContent = '';
+
+  if (!firstName) { errEl.textContent = 'Ad alanı zorunludur.'; return; }
+
+  const name = [firstName, lastName].filter(Boolean).join(' ');
+
+  const btn = document.getElementById('btnSaveCustomer');
+  btn.disabled = true;
+  btn.textContent = 'Kaydediliyor...';
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({ name, phone, address, district, city, zip, notes })
+    .eq('id', userId);
+
+  btn.disabled = false;
+  btn.innerHTML = '💾 Kaydet';
+
+  if (error) {
+    errEl.textContent = 'Kayıt sırasında hata: ' + error.message;
+    showToast('Kayıt başarısız', 'error');
+    return;
+  }
+
+  // Hero'yu güncelle
+  document.getElementById('cmDisplayName').textContent = name;
+  document.getElementById('cmAvatar').textContent = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+
+  showToast('Müşteri profili güncellendi ✓');
+  closeModal('customerModal');
+  renderUsers();
 }
 
 // ── SETTINGS ──────────────────────────────────────────────────────────────────
@@ -599,15 +814,17 @@ function viewPendingOrders() {
 }
 
 // ── Global erişim (onclick="..." için) ───────────────────────────────────────
-window.openOrderDetail    = openOrderDetail;
-window.quickStatusCycle   = quickStatusCycle;
-window.openProductModal   = openProductModal;
-window.deleteProduct      = deleteProduct;
-window.toggleProductActive = toggleProductActive;
-window.downloadOrderPdf   = downloadOrderPdf;
-window.closeModal         = closeModal;
-window.switchTab          = switchTab;
-window.viewPendingOrders  = viewPendingOrders;
+window.openOrderDetail       = openOrderDetail;
+window.showInlineStatusPicker = showInlineStatusPicker;
+window.openProductModal      = openProductModal;
+window.deleteProduct         = deleteProduct;
+window.toggleProductActive   = toggleProductActive;
+window.downloadOrderPdf      = downloadOrderPdf;
+window.closeModal            = closeModal;
+window.switchTab             = switchTab;
+window.viewPendingOrders     = viewPendingOrders;
+window.openCustomerModal     = openCustomerModal;
+
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
@@ -644,6 +861,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('btnSaveOrderStatus').addEventListener('click', saveOrderStatus);
   document.getElementById('btnNewProduct').addEventListener('click', () => openProductModal(null));
   document.getElementById('settingsForm').addEventListener('submit', saveSettings);
+  document.getElementById('btnSaveCustomer').addEventListener('click', saveCustomer);
+
+  // Sipariş detayı modalı — çarp (X) ve İptal butonları
+  document.querySelectorAll('[data-close-modal]').forEach(btn => {
+    btn.addEventListener('click', () => closeModal(btn.dataset.closeModal));
+  });
 
   document.querySelectorAll('.modal-overlay').forEach(overlay => {
     overlay.addEventListener('click', e => {

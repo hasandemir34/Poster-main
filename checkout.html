@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
@@ -229,6 +229,7 @@
 </div>
 
 <script type="module">
+import { supabase } from './js/supabase.js';
 import { getCurrentUser, requireAuth } from './js/auth.js?v=6';
 import { getCart, createOrder } from './js/cart.js?v=6';
 import { renderSiteNav } from './js/header.js?v=6';
@@ -242,6 +243,34 @@ const cart = getCart();
 
 if (!cart) {
   window.location.href = 'templates.html';
+}
+
+// Prefill profile details if available
+try {
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', user.id)
+    .single();
+
+  if (profile) {
+    if (profile.name) {
+      const parts = profile.name.trim().split(/\s+/);
+      if (parts.length > 1) {
+        document.getElementById('adFirstName').value = parts[0];
+        document.getElementById('adLastName').value = parts.slice(1).join(' ');
+      } else {
+        document.getElementById('adFirstName').value = profile.name;
+      }
+    }
+    if (profile.phone) document.getElementById('adPhone').value = profile.phone;
+    if (profile.address) document.getElementById('adLine').value = profile.address;
+    if (profile.district) document.getElementById('adDistrict').value = profile.district;
+    if (profile.city) document.getElementById('adCity').value = profile.city;
+    if (profile.zip) document.getElementById('adPostal').value = profile.zip;
+  }
+} catch (e) {
+  console.error('Profile prefill failed:', e);
 }
 
 // Nav render
